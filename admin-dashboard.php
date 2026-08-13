@@ -129,6 +129,12 @@ $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin');
                 📥 CSV Export
             </a>
         </div>
+        <div class="mt-3">
+            <a href="sheets-sync.php"
+               class="flex items-center justify-center gap-2 bg-green-700 hover:bg-green-800 text-white text-sm font-semibold py-3 rounded-xl transition-colors">
+                📊 Google Sheets Sync
+            </a>
+        </div>
     </div>
 
     <!-- SEARCH -->

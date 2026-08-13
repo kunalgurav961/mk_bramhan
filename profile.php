@@ -20,7 +20,9 @@ $stmt = $conn->prepare("
            height_ft, height_in, salary, education, occupation, city,
            father_name, mother_name, family_details, about_me,
            shortlisted, created_at, status,
-           mobile_no, mobile,
+           mobile_no, mobile, mobile_2, mobile_3, mobile_4,
+           jaat, rashi,
+           sheet_img_1, sheet_img_2, sheet_img_3, sheet_img_4,
            COALESCE(profile_image, profile_photo) AS img_file
     FROM   profiles
     WHERE  id = ?
@@ -579,6 +581,18 @@ if (str_contains($backUrl, 'admin-dashboard')) $backLabel = 'Admin Dashboard';
                 <span class="info-label">गोत्र</span>
                 <span class="info-value"><?= htmlspecialchars($p['gotra'] ?: '—') ?></span>
             </div>
+            <?php if (!empty($p['jaat'])): ?>
+            <div class="info-row">
+                <span class="info-label">जात</span>
+                <span class="info-value"><?= htmlspecialchars($p['jaat']) ?></span>
+            </div>
+            <?php endif; ?>
+            <?php if (!empty($p['rashi'])): ?>
+            <div class="info-row">
+                <span class="info-label">रास</span>
+                <span class="info-value"><?= htmlspecialchars($p['rashi']) ?></span>
+            </div>
+            <?php endif; ?>
             <div class="info-row">
                 <span class="info-label">उंची</span>
                 <span class="info-value"><?= (int)$p['height_ft'] ?>'<?= (int)$p['height_in'] ?>"</span>
@@ -590,6 +604,11 @@ if (str_contains($backUrl, 'admin-dashboard')) $backLabel = 'Admin Dashboard';
             <?php
                 // Resolve mobile: prefer mobile_no, fallback to legacy mobile column
                 $displayMobile = trim($p['mobile_no'] ?? '') ?: trim($p['mobile'] ?? '');
+                $extraMobiles  = array_filter([
+                    trim($p['mobile_2'] ?? ''),
+                    trim($p['mobile_3'] ?? ''),
+                    trim($p['mobile_4'] ?? ''),
+                ]);
             ?>
             <?php if ($displayMobile): ?>
             <div class="info-row">
@@ -602,6 +621,17 @@ if (str_contains($backUrl, 'admin-dashboard')) $backLabel = 'Admin Dashboard';
                 </span>
             </div>
             <?php endif; ?>
+            <?php foreach ($extraMobiles as $mob): ?>
+            <div class="info-row">
+                <span class="info-label">📱 मोबाईल</span>
+                <span class="info-value">
+                    <a href="tel:<?= htmlspecialchars($mob) ?>"
+                       style="color:var(--brand);font-weight:600;text-decoration:none;">
+                        <?= htmlspecialchars($mob) ?>
+                    </a>
+                </span>
+            </div>
+            <?php endforeach; ?>
         </div>
 
         <!-- Professional Info -->
