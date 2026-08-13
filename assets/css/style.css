@@ -181,6 +181,94 @@ input, select, textarea { font-family: inherit; }
     pointer-events: none;
 }
 
+/* ---------- FILTER BAR ---------- */
+.filter-bar {
+    padding: 7px 10px 6px;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: calc(var(--header-h) + 82px); /* below search box */
+    z-index: 85;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    align-items: center;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+.filter-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: .3px;
+    white-space: nowrap;
+    text-transform: uppercase;
+}
+
+/* Gender chips */
+.filter-chips {
+    display: flex;
+    gap: 4px;
+}
+
+.chip {
+    border: 1.5px solid var(--border);
+    background: var(--bg-main);
+    color: var(--text-primary);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 9px;
+    border-radius: 20px;
+    line-height: 1.4;
+    transition: background .18s, border-color .18s, color .18s;
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: inherit;
+}
+
+.chip.active,
+.chip:active {
+    background: var(--brand);
+    border-color: var(--brand);
+    color: #fff;
+}
+
+.chip-all.active { background: #374151; border-color: #374151; color: #fff; }
+
+.chip-f:not(.active):hover { background: var(--female-bg); border-color: var(--female); color: var(--female); }
+.chip-f.active              { background: var(--female); border-color: var(--female); color: #fff; }
+
+.chip-m:not(.active):hover { background: var(--male-bg); border-color: var(--male); color: var(--male); }
+.chip-m.active              { background: var(--male); border-color: var(--male); color: #fff; }
+
+/* Filter select (city / year / sort) */
+.filter-select {
+    height: 26px;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg-main);
+    color: var(--text-primary);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 0 6px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color .18s;
+    max-width: 100px;
+    font-family: inherit;
+}
+
+.filter-select:focus {
+    border-color: var(--brand);
+    box-shadow: 0 0 0 2px rgba(192,57,43,.10);
+}
+
 /* ---------- OVERLAY ---------- */
 .overlay {
     display: none;
