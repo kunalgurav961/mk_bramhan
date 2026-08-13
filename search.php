@@ -16,26 +16,11 @@ require_once 'includes/transliteration.php';
 header('Content-Type: text/html; charset=utf-8');
 
 $conn        = getDB();
-$rawSearch      = trim($_GET['search']      ?? '');
-$shortlisted    = isset($_GET['shortlisted']) && $_GET['shortlisted'] === '1';
-$page           = max(1, (int)($_GET['page'] ?? 1));
-$perPage        = 50;
-$offset         = ($page - 1) * $perPage;
-
-// ── NEW FILTER PARAMS ────────────────────────────────────────────────────────
-$filterGender    = $_GET['gender']     ?? '';          // '' | '0' | '1'
-$filterCity      = trim($_GET['city']  ?? '');         // city name or ''
-$filterBirthYear = trim($_GET['birth_year'] ?? '');    // year or ''
-
-// Sort whitelist — maps safe token → SQL expression
-$sortMap = [
-    'birth_year_asc'  => 'birth_year ASC',
-    'birth_year_desc' => 'birth_year DESC',
-    'name_asc'        => 'name ASC',
-    'id_desc'         => 'id DESC',
-];
-$sortToken  = $_GET['sort'] ?? 'birth_year_asc';
-$orderBySQL = $sortMap[$sortToken] ?? 'birth_year ASC';
+$rawSearch   = trim($_GET['search']   ?? '');
+$shortlisted = isset($_GET['shortlisted']) && $_GET['shortlisted'] === '1';
+$page        = max(1, (int)($_GET['page'] ?? 1));
+$perPage     = 50;
+$offset      = ($page - 1) * $perPage;
 
 // ── SMART SEARCH PARSING ──────────────────────────────────────────────────────
 
@@ -79,27 +64,6 @@ if ($shortlisted) {
     $whereClauses[] = 'shortlisted = 1';
 }
 
-// Gender filter
-if ($filterGender !== '' && in_array($filterGender, ['0', '1'], true)) {
-    $whereClauses[] = 'gender = ?';
-    $params[]        = (int)$filterGender;
-    $types          .= 'i';
-}
-
-// City filter
-if ($filterCity !== '') {
-    $whereClauses[] = 'city = ?';
-    $params[]        = $filterCity;
-    $types          .= 's';
-}
-
-// Birth year filter
-if ($filterBirthYear !== '') {
-    $whereClauses[] = 'birth_year = ?';
-    $params[]        = $filterBirthYear;
-    $types          .= 's';
-}
-
 if ($mobileSearch) {
     // Mobile number: search both mobile_no and legacy mobile column
     $like = "%{$rawSearch}%";
@@ -110,19 +74,14 @@ if ($mobileSearch) {
 
 } elseif ($numericParsed !== null) {
     // Numeric: exact gender + birth_year match
-    // Skip if filter-bar already provides gender/birth_year to avoid duplicate clauses
-    if ($genderFilter === null && $filterGender === '') {
-        if ($numericParsed['gender'] !== null) {
-            $whereClauses[] = 'gender = ?';
-            $params[]        = $numericParsed['gender'];
-            $types          .= 'i';
-        }
+    if ($genderFilter !== null) {
+        $whereClauses[] = 'gender = ?';
+        $params[]        = $genderFilter;
+        $types          .= 'i';
     }
-    if ($filterBirthYear === '') {
-        $whereClauses[] = 'birth_year = ?';
-        $params[]        = $birthYearFilter;
-        $types          .= 's';
-    }
+    $whereClauses[] = 'birth_year = ?';
+    $params[]        = $birthYearFilter;
+    $types          .= 's';
 
 } elseif (!empty($searchTerms)) {
     // Text search: each term becomes a LIKE group
@@ -151,7 +110,7 @@ $sql = "
            COALESCE(mobile_no, mobile) AS display_mobile
     FROM   profiles
     {$whereSQL}
-    ORDER  BY {$orderBySQL}
+    ORDER  BY id DESC
     LIMIT  ? OFFSET ?
 ";
 

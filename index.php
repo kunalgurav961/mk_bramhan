@@ -10,23 +10,13 @@ $offset  = ($page - 1) * $perPage;
 
 $totalCount = (int)$conn->query("SELECT COUNT(*) AS c FROM profiles WHERE status != 'Inactive'")->fetch_assoc()['c'];
 
-// Fetch distinct cities for filter dropdown
-$cityRows = [];
-$cityRes = $conn->query("SELECT DISTINCT city FROM profiles WHERE status != 'Inactive' AND city IS NOT NULL AND city != '' ORDER BY city");
-while ($cr = $cityRes->fetch_assoc()) $cityRows[] = $cr['city'];
-
-// Fetch distinct birth years for filter dropdown
-$yearRows = [];
-$yearRes = $conn->query("SELECT DISTINCT birth_year FROM profiles WHERE status != 'Inactive' AND birth_year IS NOT NULL AND birth_year != '' ORDER BY birth_year ASC");
-while ($yr = $yearRes->fetch_assoc()) $yearRows[] = $yr['birth_year'];
-
 $result = $conn->prepare("
     SELECT id, gender, birth_year, name, gotra, height_ft, height_in,
            salary, education, city, registration_no, shortlisted,
            COALESCE(profile_image, profile_photo) AS img_file
     FROM   profiles
     WHERE  status != 'Inactive'
-    ORDER  BY birth_year ASC
+    ORDER  BY id DESC
     LIMIT  ? OFFSET ?
 ");
 $result->bind_param('ii', $perPage, $offset);
@@ -99,52 +89,6 @@ while ($row = $res->fetch_assoc()) $profiles[] = $row;
                 aria-label="Search by mobile number"
             >
             <span class="search-icon">📞</span>
-        </div>
-    </div>
-
-    <!-- FILTER BAR -->
-    <div class="filter-bar" id="filterBar">
-        <!-- Gender filter -->
-        <div class="filter-group">
-            <span class="filter-label">लिंग</span>
-            <div class="filter-chips">
-                <button class="chip chip-all active" data-filter="gender" data-value="" id="genderAll">सर्व</button>
-                <button class="chip chip-f" data-filter="gender" data-value="0" id="genderF">0 मुलगी</button>
-                <button class="chip chip-m" data-filter="gender" data-value="1" id="genderM">1 मुलगा</button>
-            </div>
-        </div>
-
-        <!-- City filter -->
-        <div class="filter-group">
-            <span class="filter-label">शहर</span>
-            <select class="filter-select" id="cityFilter" data-filter="city">
-                <option value="">सर्व शहरे</option>
-                <?php foreach ($cityRows as $city): ?>
-                <option value="<?= htmlspecialchars($city) ?>"><?= htmlspecialchars($city) ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-
-        <!-- Birth year filter -->
-        <div class="filter-group">
-            <span class="filter-label">वर्ष</span>
-            <select class="filter-select" id="yearFilter" data-filter="birth_year">
-                <option value="">सर्व वर्षे</option>
-                <?php foreach ($yearRows as $yr): ?>
-                <option value="<?= htmlspecialchars($yr) ?>"><?= htmlspecialchars($yr) ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-
-        <!-- Sort by -->
-        <div class="filter-group">
-            <span class="filter-label">क्रम</span>
-            <select class="filter-select" id="sortFilter" data-filter="sort">
-                <option value="birth_year_asc">वर्ष ↑ (जुने)</option>
-                <option value="birth_year_desc">वर्ष ↓ (नवीन)</option>
-                <option value="name_asc">नाव A→Z</option>
-                <option value="id_desc">नोंद ↓ (नवीन)</option>
-            </select>
         </div>
     </div>
 

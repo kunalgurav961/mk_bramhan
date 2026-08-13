@@ -69,34 +69,6 @@ function debounce(fn, delay) {
     };
 }
 
-// ---------- FILTER STATE HELPERS ----------
-/**
- * Read all currently active filter values and return a URLSearchParams string.
- */
-function getFilterParams() {
-    const params = new URLSearchParams();
-
-    // Gender chip
-    const activeChip = document.querySelector('.chip[data-filter="gender"].active');
-    if (activeChip && activeChip.dataset.value !== '') {
-        params.set('gender', activeChip.dataset.value);
-    }
-
-    // City select
-    const cityEl = document.getElementById('cityFilter');
-    if (cityEl && cityEl.value) params.set('city', cityEl.value);
-
-    // Birth year select
-    const yearEl = document.getElementById('yearFilter');
-    if (yearEl && yearEl.value) params.set('birth_year', yearEl.value);
-
-    // Sort select
-    const sortEl = document.getElementById('sortFilter');
-    if (sortEl && sortEl.value) params.set('sort', sortEl.value);
-
-    return params;
-}
-
 // ---------- REAL-TIME SEARCH ----------
 (function () {
     const searchInput      = document.getElementById('searchInput');
@@ -125,11 +97,8 @@ function getFilterParams() {
         if (spinner) spinner.style.display = 'block';
 
         try {
-            const filterParams = getFilterParams();
             let url = `${searchUrl}?search=${encodeURIComponent(q)}`;
             if (isShortlisted) url += '&shortlisted=1';
-            // Append filter params
-            filterParams.forEach((v, k) => { url += `&${k}=${encodeURIComponent(v)}`; });
 
             const res  = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
             const html = await res.text();
@@ -162,9 +131,6 @@ function getFilterParams() {
             doSearch(this.value.trim());
         }
     });
-
-    // Expose doSearch globally so filter bar can trigger it
-    window._triggerSearch = () => doSearch(searchInput ? searchInput.value.trim() : '');
 })();
 
 // ---------- ROW KEYBOARD ACCESSIBILITY ----------
@@ -285,24 +251,6 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('moreMenu')?.classList.remove('open');
         }
     });
-
-    // ── FILTER BAR ──────────────────────────────────────────────────────────
-    // Gender chips
-    document.querySelectorAll('.chip[data-filter="gender"]').forEach(btn => {
-        btn.addEventListener('click', function () {
-            document.querySelectorAll('.chip[data-filter="gender"]').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            if (window._triggerSearch) window._triggerSearch();
-        });
-    });
-
-    // City, birth year, sort selects
-    ['cityFilter', 'yearFilter', 'sortFilter'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener('change', () => {
-            if (window._triggerSearch) window._triggerSearch();
-        });
-    });
 });
 
 // ---------- MOBILE NUMBER SEARCH (dedicated field) ----------
@@ -325,9 +273,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         if (spinner) spinner.style.display = 'block';
         try {
-            const filterParams = getFilterParams();
-            let url = `${searchUrl}?search=${encodeURIComponent(q)}`;
-            filterParams.forEach((v, k) => { url += `&${k}=${encodeURIComponent(v)}`; });
+            const url = `${searchUrl}?search=${encodeURIComponent(q)}`;
             const res  = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
             const html = await res.text();
             resultsEl.innerHTML = html;

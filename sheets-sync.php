@@ -1,4 +1,4 @@
-वर्ष<?php
+<?php
 /**
  * MK Brahman — Google Sheets Sync Page
  * Admin-only. Triggers sync from Google Sheets → MySQL.
