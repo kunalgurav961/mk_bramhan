@@ -16,7 +16,8 @@
 define('SHEETS_SCRIPT_URL', 'https://script.google.com/macros/s/AKfycbxbUGnj1ShT1cLkEdkEray45jo7SGLaf3ESEWLSEzHeFdmeaNrPbkianc6NKYFMZTv6/exec');  // <-- FILL THIS IN after deployment
 
 // Sync behaviour
-define('SHEETS_TIMEOUT',    20);   // seconds to wait for Apps Script response
+define('SHEETS_TIMEOUT',    60);    // seconds — Apps Script can be slow on large sheets
+define('SHEETS_CHUNK_SIZE', 150);   // rows per HTTP request — avoids timeout on 600+ rows
 define('SHEETS_DOWNLOAD_IMAGES', true);  // download Drive images locally on sync
 
 // ── SheetsService class ──────────────────────────────────────────────────────
@@ -60,18 +61,55 @@ class SheetsService {
      * @return array  ['added'=>N, 'updated'=>N, 'skipped'=>N, 'errors'=>[...]]
      */
     public static function sync(mysqli $conn, string $sheet = ''): array {
-        $data = self::getAll($sheet);
-
-        if (($data['status'] ?? '') !== 'ok') {
-            return [
-                'added'   => 0, 'updated' => 0, 'skipped' => 0,
-                'errors'  => ['Apps Script error: ' . ($data['message'] ?? 'unknown')],
-            ];
-        }
-
         $result = ['added' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []];
 
-        foreach ($data['profiles'] as $p) {
+        // ── Step 1: get total row count so we know how many chunks to fetch ──
+        $countData = self::call(['action' => 'count']);
+        if (($countData['status'] ?? '') !== 'ok') {
+            // Fallback: try fetching everything at once (smaller sheets)
+            return self::syncChunk($conn, $sheet, 0, 0, $result);
+        }
+
+        $total     = (int)($countData['total'] ?? 0);
+        $chunkSize = SHEETS_CHUNK_SIZE;
+
+        if ($total === 0 || $total <= $chunkSize) {
+            // Small enough — fetch all at once
+            return self::syncChunk($conn, $sheet, 0, 0, $result);
+        }
+
+        // ── Step 2: fetch in chunks ───────────────────────────────────────────
+        $offset = 0;
+        while ($offset < $total) {
+            $chunkResult = self::syncChunk($conn, $sheet, $offset, $chunkSize, $result);
+            // syncChunk modifies $result in-place via reference; errors are accumulated
+            if (!empty($chunkResult['fatal'])) {
+                $result['errors'][] = 'Chunk at offset ' . $offset . ' failed: ' . $chunkResult['fatal'];
+                break;
+            }
+            $offset += $chunkSize;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Sync one chunk of rows (offset/limit) from Apps Script.
+     * @internal
+     */
+    private static function syncChunk(mysqli $conn, string $sheet, int $offset, int $limit, array &$result): array {
+        $params = ['action' => 'getAll'];
+        if ($sheet !== '')  $params['sheet']  = $sheet;
+        if ($offset > 0)    $params['offset'] = $offset;
+        if ($limit  > 0)    $params['limit']  = $limit;
+
+        $data = self::call($params);
+
+        if (($data['status'] ?? '') !== 'ok') {
+            return ['fatal' => 'Apps Script error: ' . ($data['message'] ?? 'unknown')];
+        }
+
+        foreach ($data['profiles'] ?? [] as $p) {
             try {
                 self::upsertProfile($conn, $p, $result);
             } catch (Throwable $e) {
@@ -80,7 +118,7 @@ class SheetsService {
             }
         }
 
-        return $result;
+        return [];
     }
 
     // ── Internal helpers ─────────────────────────────────────────────────────
@@ -108,6 +146,7 @@ class SheetsService {
         }
 
         // Map fields
+        // birth_year from Apps Script is now a full 4-digit year (e.g. "2006") or 2-digit ("95")
         $gender    = (int)($p['gender']    ?? 1);
         $birthYr   = substr(trim($p['birth_year'] ?? ''), 0, 4);
         $name      = substr(trim($p['name']      ?? ''), 0, 100);

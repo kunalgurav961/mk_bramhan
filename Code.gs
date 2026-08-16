@@ -69,8 +69,15 @@ function doGet(e) {
     }
 
     if (action === 'getAll') {
-      var sheetParam = (e.parameter.sheet || '').trim();
-      return ok(getAllProfiles(sheetParam));
+      var sheetParam = (e.parameter.sheet  || '').trim();
+      var offset     = parseInt(e.parameter.offset || '0',  10) || 0;
+      var limit      = parseInt(e.parameter.limit  || '0',  10) || 0;  // 0 = all
+      return ok(getAllProfiles(sheetParam, offset, limit));
+    }
+
+    if (action === 'count') {
+      // Returns total row count across all sheets (for chunked sync)
+      return ok(getTotalCount());
     }
 
     if (action === 'getByRegNo') {
@@ -94,7 +101,19 @@ function doGet(e) {
 
 // ── Business logic ───────────────────────────────────────────────────────────
 
-function getAllProfiles(sheetName) {
+function getTotalCount() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var total = 0;
+  ss.getSheets().forEach(function(s) {
+    total += Math.max(0, s.getLastRow() - 1);
+  });
+  return { status: 'ok', total: total };
+}
+
+function getAllProfiles(sheetName, offset, limit) {
+  offset = offset || 0;
+  limit  = limit  || 0;   // 0 means return all
+
   var ss     = SpreadsheetApp.getActiveSpreadsheet();
   var sheets = sheetName
     ? [ss.getSheetByName(sheetName)].filter(Boolean)
@@ -106,6 +125,13 @@ function getAllProfiles(sheetName) {
     var profiles = readSheet(s, gender);
     all = all.concat(profiles);
   });
+
+  // Apply offset/limit for chunked sync
+  if (limit > 0) {
+    all = all.slice(offset, offset + limit);
+  } else if (offset > 0) {
+    all = all.slice(offset);
+  }
 
   return { status: 'ok', count: all.length, profiles: all };
 }
@@ -170,9 +196,12 @@ function readSheet(sheet, gender) {
     var name  = String(row[COL.NAME]   || '').trim();
     if (!regNo && !name) return;  // skip blank rows
 
-    var h       = parseHeight(String(row[COL.HEIGHT] || ''));
-    var salary  = parseSalary(String(row[COL.SALARY] || ''));
-    var birthYr = parseBirthYear(String(row[COL.BIRTH_YEAR] || ''));
+    var h        = parseHeight(String(row[COL.HEIGHT] || ''));
+    var salary   = parseSalary(String(row[COL.SALARY] || ''));
+    var birthParsed = parseBirthYear(String(row[COL.BIRTH_YEAR] || ''));
+
+    // If birth_year encodes gender (12006 → boy+2006), override sheet-detected gender
+    var finalGender = (birthParsed.gender !== null) ? birthParsed.gender : gender;
 
     var images = [
       normalizeDriveUrl(String(row[COL.IMAGE_1] || '')),
@@ -184,8 +213,8 @@ function readSheet(sheet, gender) {
     profiles.push({
       row_number      : idx + 2,
       registration_no : regNo || ('ROW' + (idx + 2)),
-      gender          : String(gender),
-      birth_year      : birthYr,
+      gender          : String(finalGender),
+      birth_year      : birthParsed.year,
       name            : name,
       height_ft       : h.ft,
       height_in       : h.inches,
@@ -273,14 +302,38 @@ function parseSalary(raw) {
 
 /**
  * Normalize birth year.
- * "1995" → "95", "2001" → "01", "95" → "95"
+ *
+ * Supported formats:
+ *  "1995"  → year "1995"  (full 4-digit year stored as-is)
+ *  "95"    → year "95"
+ *  "12006" → gender=1(boy),  year="2006"  (5-digit encoded: first digit = gender)
+ *  "22006" → gender=2(girl), year="2006"  (5-digit encoded: first digit = gender)
+ *  "12000" to "12099" or "22000" etc.
+ *
+ * Returns an object { year: string, gender: int|null }
  */
 function parseBirthYear(raw) {
   raw = raw.trim().replace(/[^0-9]/g, '');
-  if (raw.length === 4) return raw.slice(2);  // 1995 → 95
-  if (raw.length === 2) return raw;           // 95 → 95
-  if (raw.length === 1) return '0' + raw;     // 1 → 01
-  return raw;
+
+  // 5-digit encoded: 1YYYY or 2YYYY
+  if (raw.length === 5) {
+    var prefix = raw.charAt(0);
+    var yr     = raw.slice(1);   // last 4 digits = full year e.g. "2006"
+    if (prefix === '1' || prefix === '2') {
+      return { year: yr, gender: parseInt(prefix) };
+    }
+  }
+
+  // Standard 4-digit year
+  if (raw.length === 4) return { year: raw, gender: null };
+
+  // 2-digit short year
+  if (raw.length === 2) return { year: raw, gender: null };
+
+  // 1-digit — pad
+  if (raw.length === 1) return { year: '0' + raw, gender: null };
+
+  return { year: raw, gender: null };
 }
 
 /**
