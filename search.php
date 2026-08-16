@@ -28,9 +28,9 @@ $offset      = ($page - 1) * $perPage;
 
 // ── FILTER PARAMS ─────────────────────────────────────────────────
 
-// Gender filter: '' = all, '0' = girl, '1' = boy
+// Gender filter: '' = all, '1' = boy (gender=1), '2' = girl (gender=2 in DB)
 $genderParam = $_GET['gender'] ?? '';
-$genderFilter = ($genderParam === '0' || $genderParam === '1') ? (int)$genderParam : null;
+$genderFilter = in_array($genderParam, ['1', '2'], true) ? (int)$genderParam : null;
 
 // Sort
 $allowedSortCols = ['id', 'name', 'birth_year', 'city', 'registration_no'];

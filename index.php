@@ -99,7 +99,7 @@ while ($row = $res->fetch_assoc()) $profiles[] = $row;
             <div class="filter-gender-group">
                 <button class="filter-chip active" id="genderAll"   data-gender=""  aria-pressed="true">सर्व</button>
                 <button class="filter-chip"         id="genderBoy"  data-gender="1" aria-pressed="false">👦 मुलगा</button>
-                <button class="filter-chip"         id="genderGirl" data-gender="0" aria-pressed="false">👧 मुलगी</button>
+                <button class="filter-chip"         id="genderGirl" data-gender="2" aria-pressed="false">👧 मुलगी</button>
             </div>
 
             <!-- Right: sort controls -->
