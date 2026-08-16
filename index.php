@@ -92,32 +92,31 @@ while ($row = $res->fetch_assoc()) $profiles[] = $row;
             <span class="search-icon">📞</span>
         </div>
 
-        <!-- FILTER BAR -->
+        <!-- FILTER BAR — one-line strip: [सर्व|मुलगा|मुलगी]  [sort▾][↓] -->
         <div class="filter-bar" id="filterBar" role="group" aria-label="Filters">
 
-            <!-- Gender filter chips -->
-            <div class="filter-group">
+            <!-- Left: gender segmented control -->
+            <div class="filter-gender-group">
                 <button class="filter-chip active" id="genderAll"   data-gender=""  aria-pressed="true">सर्व</button>
                 <button class="filter-chip"         id="genderBoy"  data-gender="1" aria-pressed="false">👦 मुलगा</button>
                 <button class="filter-chip"         id="genderGirl" data-gender="0" aria-pressed="false">👧 मुलगी</button>
             </div>
 
-            <!-- Sort controls -->
-            <div class="filter-group sort-group">
-                <span class="filter-label">क्रमवारी:</span>
-                <select id="sortBy" aria-label="Sort by column">
-                    <option value="id"            selected>नोंद क्र.</option>
+            <!-- Right: sort controls -->
+            <div class="filter-sort-group">
+                <select id="sortBy" class="sort-select" aria-label="Sort by column">
+                    <option value="id"         selected>नोंद क्र.</option>
                     <option value="name">नाव</option>
                     <option value="birth_year">वर्ष</option>
                     <option value="city">शहर</option>
                 </select>
-                <button class="sort-dir-btn" id="sortDirBtn" data-dir="DESC" title="Sort direction" aria-label="Toggle sort direction">
+                <button class="sort-dir-btn" id="sortDirBtn" data-dir="DESC" title="Descending order" aria-label="Toggle sort direction">
                     <span class="sort-icon">↓</span>
                 </button>
             </div>
 
         </div>
-        <!-- /FILTER BAR -->
+
 
     </div>
     <!-- /SEARCH BOX -->

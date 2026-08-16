@@ -1,5 +1,5 @@
 /* ===================================================
-   MK BRAHMAN — app.js  v3.0
+   MK BRAHMAN — app.js  v3.1
    Smart search, gender filter, sort (asc/desc),
    profile navigation, shortlist, sidebar, toast,
    debounce, accessibility
@@ -8,11 +8,6 @@
 'use strict';
 
 // ---------- PROFILE NAVIGATION ----------
-/**
- * Navigate to the profile detail page.
- * @param {number} id       Profile database ID
- * @param {string} [from]   The page we came from (for back button)
- */
 function openProfile(id, from) {
     if (!id) return;
     const currentPage = from || window.location.pathname.split('/').pop() || 'index.php';
@@ -70,153 +65,6 @@ function debounce(fn, delay) {
     };
 }
 
-// ==========================================================
-//  UNIFIED SEARCH + FILTER ENGINE
-//  Reads from: searchInput, mobileSearchInput, gender chips,
-//              sortBy select, sortDirBtn
-// ==========================================================
-(function () {
-    const searchInput  = document.getElementById('searchInput');
-    const mobileInput  = document.getElementById('mobileSearchInput');
-    const resultsEl    = document.getElementById('results');
-    const spinner      = document.getElementById('spinner');
-    const sectionTag   = document.getElementById('sectionTag');
-
-    // Filter/sort controls (may not exist on all pages)
-    const genderChips  = document.querySelectorAll('.filter-chip[data-gender]');
-    const sortByEl     = document.getElementById('sortBy');
-    const sortDirBtn   = document.getElementById('sortDirBtn');
-
-    if (!resultsEl) return;
-
-    const searchUrl     = searchInput?.dataset.url || 'search.php';
-    const isShortlisted = searchInput?.dataset.shortlisted === '1';
-
-    // ── State ──────────────────────────────────────────────────────
-    let activeGender = '';   // '' | '0' | '1'
-    let sortBy       = 'id';
-    let sortDir      = 'DESC';
-
-    // ── Helpers ────────────────────────────────────────────────────
-    function buildUrl(q) {
-        const params = new URLSearchParams();
-        if (q)          params.set('search',    q);
-        if (activeGender !== '') params.set('gender',  activeGender);
-        params.set('sort_by',  sortBy);
-        params.set('sort_dir', sortDir);
-        if (isShortlisted) params.set('shortlisted', '1');
-        return `${searchUrl}?${params.toString()}`;
-    }
-
-    async function runSearch(q) {
-        if (spinner) spinner.style.display = 'block';
-        try {
-            const url  = buildUrl(q);
-            const res  = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-            const html = await res.text();
-
-            resultsEl.innerHTML = html;
-
-            attachShortlistHandlers(resultsEl);
-            attachRowKeyboard(resultsEl);
-
-            // Update displayed count
-            const rows = resultsEl.querySelectorAll('tr.data-row');
-            if (sectionTag) {
-                const countEl = sectionTag.querySelector('.count');
-                if (countEl) countEl.textContent = rows.length;
-            }
-        } catch (err) {
-            console.error('Search error:', err);
-        } finally {
-            if (spinner) spinner.style.display = 'none';
-        }
-    }
-
-    function getCurrentQuery() {
-        // Mobile field takes priority if filled
-        if (mobileInput && mobileInput.value.trim()) return mobileInput.value.trim();
-        return searchInput ? searchInput.value.trim() : '';
-    }
-
-    const debouncedSearch = debounce(function () {
-        runSearch(getCurrentQuery());
-    }, 280);
-
-    // ── Search Input ───────────────────────────────────────────────
-    if (searchInput) {
-        // Smart hint
-        searchInput.addEventListener('keyup', function () {
-            const val = this.value.trim();
-            if (/^\d{7,}$/.test(val)) {
-                this.title = '📱 मोबाईल नंबर शोधत आहे...';
-            } else if (/^\d{1,3}$/.test(val)) {
-                this.title = '💡 Smart: 3 अंक = लिंग+वर्ष (उदा. 195 = मुलगा+1995)';
-            } else {
-                this.title = '';
-            }
-        });
-
-        searchInput.addEventListener('input',  function () {
-            if (mobileInput && this.value.trim()) mobileInput.value = '';
-            debouncedSearch();
-        });
-        searchInput.addEventListener('search', debouncedSearch);
-        searchInput.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') { e.preventDefault(); runSearch(this.value.trim()); }
-        });
-    }
-
-    // ── Mobile Number Search ───────────────────────────────────────
-    if (mobileInput) {
-        mobileInput.addEventListener('input', function () {
-            const digits = this.value.replace(/\D/g, '');
-            if (this.value !== digits) this.value = digits;
-            if (searchInput && digits) searchInput.value = '';
-            debouncedSearch();
-        });
-        mobileInput.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') { e.preventDefault(); runSearch(this.value.replace(/\D/g, '')); }
-        });
-    }
-
-    // ── Gender Chip Filter ─────────────────────────────────────────
-    genderChips.forEach(chip => {
-        chip.addEventListener('click', function () {
-            activeGender = this.dataset.gender;
-
-            // Update chip styles & aria-pressed
-            genderChips.forEach(c => {
-                const isActive = c === this;
-                c.classList.toggle('active', isActive);
-                c.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-            });
-
-            debouncedSearch();
-        });
-    });
-
-    // ── Sort Column ────────────────────────────────────────────────
-    if (sortByEl) {
-        sortByEl.addEventListener('change', function () {
-            sortBy = this.value;
-            debouncedSearch();
-        });
-    }
-
-    // ── Sort Direction Toggle ──────────────────────────────────────
-    if (sortDirBtn) {
-        sortDirBtn.addEventListener('click', function () {
-            sortDir = sortDir === 'DESC' ? 'ASC' : 'DESC';
-            this.dataset.dir = sortDir;
-            this.querySelector('.sort-icon').textContent = sortDir === 'ASC' ? '↑' : '↓';
-            this.setAttribute('aria-label', sortDir === 'ASC' ? 'Ascending order' : 'Descending order');
-            debouncedSearch();
-        });
-    }
-
-})();
-
 // ---------- ROW KEYBOARD ACCESSIBILITY ----------
 function attachRowKeyboard(container) {
     container = container || document;
@@ -236,9 +84,7 @@ function attachRowKeyboard(container) {
 // ---------- SHORTLIST TOGGLE ----------
 function attachShortlistHandlers(container) {
     container = container || document;
-    const btns = container.querySelectorAll('.shortlist-btn');
-
-    btns.forEach(btn => {
+    container.querySelectorAll('.shortlist-btn').forEach(btn => {
         if (btn.dataset.attached) return;
         btn.dataset.attached = '1';
 
@@ -246,16 +92,12 @@ function attachShortlistHandlers(container) {
             e.stopPropagation();
             const id = this.dataset.id;
             if (!id) return;
-
             this.classList.add('loading');
-
             try {
                 const fd = new FormData();
                 fd.append('id', id);
-
                 const res  = await fetch('toggle-shortlist.php', { method: 'POST', body: fd });
                 const data = await res.json();
-
                 if (data.shortlisted === 1) {
                     this.textContent = '❤️';
                     this.title       = 'शॉर्टलिस्टमधून काढा';
@@ -264,7 +106,6 @@ function attachShortlistHandlers(container) {
                     this.textContent = '🤍';
                     this.title       = 'शॉर्टलिस्टला जोडा';
                     showToast('🤍 शॉर्टलिस्टमधून काढले');
-
                     if (document.body.dataset.page === 'shortlisted') {
                         const row = this.closest('tr');
                         if (row) {
@@ -274,9 +115,7 @@ function attachShortlistHandlers(container) {
                         }
                     }
                 }
-
                 updateShortlistBadge(data.total_shortlisted);
-
             } catch (err) {
                 console.error('Shortlist error:', err);
                 showToast('⚠️ Error. कृपया पुन्हा प्रयत्न करा.');
@@ -295,16 +134,13 @@ function updateShortlistBadge(count) {
     }
 }
 
-async function fetchShortlistCount() {
-    try {
-        const res  = await fetch('toggle-shortlist.php?count=1');
-        const data = await res.json();
-        updateShortlistBadge(data.total_shortlisted);
-    } catch (_) { /* silent */ }
-}
-
-// ---------- INIT ----------
+// ==========================================================
+//  UNIFIED SEARCH + FILTER ENGINE
+//  Initialised inside DOMContentLoaded so all elements exist
+// ==========================================================
 document.addEventListener('DOMContentLoaded', function () {
+
+    // ── Global inits ────────────────────────────────────────
     const menuBtn = document.getElementById('menuBtn');
     if (menuBtn) menuBtn.addEventListener('click', openSidebar);
 
@@ -320,4 +156,132 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('moreMenu')?.classList.remove('open');
         }
     });
+
+    // ── Search / Filter setup ────────────────────────────────
+    const searchInput = document.getElementById('searchInput');
+    const mobileInput = document.getElementById('mobileSearchInput');
+    const resultsEl   = document.getElementById('results');
+    const spinner     = document.getElementById('spinner');
+    const sectionTag  = document.getElementById('sectionTag');
+    const genderChips = document.querySelectorAll('.filter-chip[data-gender]');
+    const sortByEl    = document.getElementById('sortBy');
+    const sortDirBtn  = document.getElementById('sortDirBtn');
+    const sortIcon    = sortDirBtn ? sortDirBtn.querySelector('.sort-icon') : null;
+
+    if (!resultsEl) return;   // Not a listing page — stop here
+
+    const searchUrl     = searchInput?.dataset.url || 'search.php';
+    const isShortlisted = searchInput?.dataset.shortlisted === '1';
+
+    // State
+    let activeGender = '';
+    let sortBy       = sortByEl ? sortByEl.value : 'id';
+    let sortDir      = 'DESC';
+
+    // Build the search URL from all current filter state
+    function buildUrl(query) {
+        const p = new URLSearchParams();
+        if (query)              p.set('search',    query);
+        if (activeGender !== '') p.set('gender',   activeGender);
+        p.set('sort_by',  sortBy);
+        p.set('sort_dir', sortDir);
+        if (isShortlisted)      p.set('shortlisted', '1');
+        return searchUrl + '?' + p.toString();
+    }
+
+    // Execute the search and replace tbody
+    async function runSearch(query) {
+        if (spinner) { spinner.style.display = 'block'; }
+        try {
+            const url  = buildUrl(query || '');
+            const resp = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            const html = await resp.text();
+            resultsEl.innerHTML = html;
+            attachShortlistHandlers(resultsEl);
+            attachRowKeyboard(resultsEl);
+            // Update displayed count
+            const rows = resultsEl.querySelectorAll('tr.data-row');
+            if (sectionTag) {
+                const countEl = sectionTag.querySelector('.count');
+                if (countEl) countEl.textContent = rows.length;
+            }
+        } catch (err) {
+            console.error('Search error:', err);
+            showToast('⚠️ शोध अयशस्वी. पुन्हा प्रयत्न करा.');
+        } finally {
+            if (spinner) { spinner.style.display = 'none'; }
+        }
+    }
+
+    function currentQuery() {
+        if (mobileInput && mobileInput.value.trim()) return mobileInput.value.trim();
+        return searchInput ? searchInput.value.trim() : '';
+    }
+
+    const debouncedSearch = debounce(() => runSearch(currentQuery()), 280);
+
+    // ── General search input ────────────────────────────────
+    if (searchInput) {
+        searchInput.addEventListener('keyup', function () {
+            const v = this.value.trim();
+            this.title = /^\d{7,}$/.test(v) ? '📱 मोबाईल नंबर शोधत आहे...'
+                       : /^\d{1,3}$/.test(v) ? '💡 Smart: 195 = मुलगा+1995'
+                       : '';
+        });
+        searchInput.addEventListener('input', function () {
+            if (mobileInput && this.value.trim()) mobileInput.value = '';
+            debouncedSearch();
+        });
+        searchInput.addEventListener('search', debouncedSearch);
+        searchInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') { e.preventDefault(); runSearch(this.value.trim()); }
+        });
+    }
+
+    // ── Mobile number search ────────────────────────────────
+    if (mobileInput) {
+        mobileInput.addEventListener('input', function () {
+            const digits = this.value.replace(/\D/g, '');
+            if (this.value !== digits) this.value = digits;
+            if (searchInput && digits) searchInput.value = '';
+            debouncedSearch();
+        });
+        mobileInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') { e.preventDefault(); runSearch(this.value.replace(/\D/g, '')); }
+        });
+    }
+
+    // ── Gender chip filter ──────────────────────────────────
+    genderChips.forEach(chip => {
+        chip.addEventListener('click', function () {
+            activeGender = this.dataset.gender;          // '' | '0' | '1'
+            genderChips.forEach(c => {
+                const active = (c === this);
+                c.classList.toggle('active', active);
+                c.setAttribute('aria-pressed', active ? 'true' : 'false');
+            });
+            runSearch(currentQuery());                    // immediate — no debounce
+        });
+    });
+
+    // ── Sort column selector ────────────────────────────────
+    if (sortByEl) {
+        sortByEl.addEventListener('change', function () {
+            sortBy = this.value;
+            runSearch(currentQuery());
+        });
+    }
+
+    // ── Sort direction toggle ───────────────────────────────
+    if (sortDirBtn) {
+        sortDirBtn.addEventListener('click', function () {
+            sortDir = (sortDir === 'DESC') ? 'ASC' : 'DESC';
+            this.dataset.dir = sortDir;
+            if (sortIcon) sortIcon.textContent = (sortDir === 'ASC') ? '↑' : '↓';
+            this.title = (sortDir === 'ASC') ? 'Ascending (A→Z)' : 'Descending (Z→A)';
+            runSearch(currentQuery());
+        });
+    }
+
 });
