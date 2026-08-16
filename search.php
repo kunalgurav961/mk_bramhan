@@ -1,13 +1,17 @@
 <?php
 /**
- * MK Brahman — Smart Search API (search.php)
+ * MK Brahman — Smart Search & Filter API  (search.php  v3.0)
  *
- * Supports:
- *   - Mobile number search (7+ digits → mobile_no / mobile LIKE)
- *   - Numeric code (195 → gender=1, birth_year=95)
- *   - Marathi/English transliteration
- *   - Shortlisted filter
- *   - AJAX partial-HTML response (returns <tr> rows)
+ * GET parameters accepted
+ * ─────────────────────────────────────────────────────────────────
+ *  search       string   Text / mobile / numeric-code query
+ *  gender       int      0 = girl, 1 = boy, '' = all
+ *  sort_by      string   column to sort: id|name|birth_year|city  (default: id)
+ *  sort_dir     string   ASC | DESC  (default: DESC)
+ *  shortlisted  int      1 = only shortlisted profiles
+ *  page         int      pagination page (default: 1)
+ *
+ * Returns AJAX partial-HTML  <tr> rows for the results tbody.
  */
 
 require_once 'includes/db.php';
@@ -22,36 +26,45 @@ $page        = max(1, (int)($_GET['page'] ?? 1));
 $perPage     = 50;
 $offset      = ($page - 1) * $perPage;
 
-// ── SMART SEARCH PARSING ──────────────────────────────────────────────────────
+// ── FILTER PARAMS ─────────────────────────────────────────────────
+
+// Gender filter: '' = all, '0' = girl, '1' = boy
+$genderParam = $_GET['gender'] ?? '';
+$genderFilter = ($genderParam === '0' || $genderParam === '1') ? (int)$genderParam : null;
+
+// Sort
+$allowedSortCols = ['id', 'name', 'birth_year', 'city', 'registration_no'];
+$sortBy  = in_array($_GET['sort_by'] ?? '', $allowedSortCols, true)
+           ? $_GET['sort_by']
+           : 'id';
+$sortDir = strtoupper($_GET['sort_dir'] ?? 'DESC') === 'ASC' ? 'ASC' : 'DESC';
+
+// ── SMART SEARCH PARSING ──────────────────────────────────────────
 
 $numericParsed   = null;
-$mobileSearch    = false;     // True when input looks like a phone number
-$searchTerms     = [];        // Array of strings to OR-search
-$genderFilter    = null;
+$mobileSearch    = false;
+$searchTerms     = [];
+$numGenderFilter = null;   // from numeric code only
 $birthYearFilter = null;
 
 if ($rawSearch !== '') {
-    // Rule 0: Mobile number — 7 or more consecutive digits (partial match allowed)
-    // Must check BEFORE the 3-digit gender+year parser so "9876543210" is not mis-parsed.
     $digitsOnly = preg_replace('/[^0-9]/', '', $rawSearch);
     if (strlen($digitsOnly) >= 7) {
+        // Looks like a phone number
         $mobileSearch = true;
     } else {
-        // Rule A: Pure numeric 3-digit code (e.g. "195", "093")
         $numericParsed = parseNumericSearch($rawSearch);
-
         if ($numericParsed !== null) {
-            $genderFilter    = $numericParsed['gender'];
+            $numGenderFilter = $numericParsed['gender'];
             $birthYearFilter = $numericParsed['birth_year'];
         } else {
-            // Rule B: Text search — get transliteration candidates
             $candidates  = getTransliterationCandidates($rawSearch);
             $searchTerms = array_unique(array_merge([$rawSearch], $candidates));
         }
     }
 }
 
-// ── BUILD SQL QUERY ───────────────────────────────────────────────────────────
+// ── BUILD SQL QUERY ───────────────────────────────────────────────
 
 $whereClauses = [];
 $params       = [];
@@ -64,8 +77,14 @@ if ($shortlisted) {
     $whereClauses[] = 'shortlisted = 1';
 }
 
+// UI Gender filter (dropdown/toggle) — takes precedence over numeric-code gender
+if ($genderFilter !== null) {
+    $whereClauses[] = 'gender = ?';
+    $params[]        = $genderFilter;
+    $types          .= 'i';
+}
+
 if ($mobileSearch) {
-    // Mobile number: search both mobile_no and legacy mobile column
     $like = "%{$rawSearch}%";
     $whereClauses[] = '(mobile_no LIKE ? OR mobile LIKE ?)';
     $params[]        = $like;
@@ -73,10 +92,10 @@ if ($mobileSearch) {
     $types          .= 'ss';
 
 } elseif ($numericParsed !== null) {
-    // Numeric: exact gender + birth_year match
-    if ($genderFilter !== null) {
+    // Numeric code: apply gender from code only if no UI gender filter set
+    if ($genderFilter === null && $numGenderFilter !== null) {
         $whereClauses[] = 'gender = ?';
-        $params[]        = $genderFilter;
+        $params[]        = $numGenderFilter;
         $types          .= 'i';
     }
     $whereClauses[] = 'birth_year = ?';
@@ -84,11 +103,9 @@ if ($mobileSearch) {
     $types          .= 's';
 
 } elseif (!empty($searchTerms)) {
-    // Text search: each term becomes a LIKE group
     $termClauses = [];
     foreach ($searchTerms as $term) {
         $like = "%{$term}%";
-        // Search across all relevant columns
         $termClauses[] = '(name LIKE ? OR gotra LIKE ? OR city LIKE ? OR registration_no LIKE ? OR education LIKE ? OR occupation LIKE ? OR father_name LIKE ? OR mobile_no LIKE ? OR mobile LIKE ?)';
         for ($k = 0; $k < 9; $k++) {
             $params[] = $like;
@@ -96,12 +113,12 @@ if ($mobileSearch) {
         }
     }
     $whereClauses[] = '(' . implode(' OR ', $termClauses) . ')';
-
-} elseif ($rawSearch === '') {
-    // Empty search → show all
 }
 
 $whereSQL = 'WHERE ' . implode(' AND ', $whereClauses);
+
+// Safe column + direction (validated above)
+$orderSQL = "ORDER BY `{$sortBy}` {$sortDir}";
 
 $sql = "
     SELECT id, gender, birth_year, name, gotra, height_ft, height_in,
@@ -110,7 +127,7 @@ $sql = "
            COALESCE(mobile_no, mobile) AS display_mobile
     FROM   profiles
     {$whereSQL}
-    ORDER  BY id DESC
+    {$orderSQL}
     LIMIT  ? OFFSET ?
 ";
 
@@ -130,11 +147,8 @@ while ($row = $result->fetch_assoc()) {
     $rows[] = $row;
 }
 
-// ── RENDER HTML ROWS ──────────────────────────────────────────────────────────
+// ── RENDER HTML ROWS ──────────────────────────────────────────────
 
-/**
- * Get the best image src for a profile row.
- */
 function getImgSrc(array $row): string {
     $filename = $row['profile_image'] ?? $row['profile_photo'] ?? '';
     if ($filename && file_exists(__DIR__ . '/uploads/profiles/' . basename($filename))) {
@@ -152,7 +166,13 @@ if (empty($rows)): ?>
 </tr>
 <?php else: ?>
 <?php foreach ($rows as $row): ?>
-<tr class="data-row profile-row" data-id="<?= (int)$row['id'] ?>" onclick="openProfile(<?= (int)$row['id'] ?>)" style="cursor:pointer;" role="button" tabindex="0" aria-label="<?= htmlspecialchars($row['name']) ?> ची प्रोफाइल पहा">
+<tr class="data-row profile-row"
+    data-id="<?= (int)$row['id'] ?>"
+    onclick="openProfile(<?= (int)$row['id'] ?>)"
+    style="cursor:pointer;"
+    role="button"
+    tabindex="0"
+    aria-label="<?= htmlspecialchars($row['name']) ?> ची प्रोफाइल पहा">
     <td>
         <?php if ((int)$row['gender'] === 1): ?>
             <span class="gender-m">मुलगा</span>

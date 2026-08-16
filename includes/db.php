@@ -1,8 +1,20 @@
 <?php
-define('DB_HOST', 'localhost');
-define('DB_USER', 'u239038253_govindvarunkar');
-define('DB_PASS', 'n+7@y^jkbSA');
-define('DB_NAME', 'u239038253_mk_brahman');
+/**
+ * MK Brahman — Database Connection
+ *
+ * Credentials are loaded from the root .env.php file.
+ * Never hard-code credentials here — keep them in .env.php only.
+ */
+
+$envFile = dirname(__DIR__) . '/.env.php';
+if (file_exists($envFile)) {
+    require_once $envFile;
+} else {
+    // Fallback: throw a clear error so we notice immediately
+    error_log('CRITICAL: .env.php not found at ' . $envFile);
+    http_response_code(500);
+    die('Configuration error. Please contact the administrator.');
+}
 
 function getDB(): mysqli {
     static $conn = null;
@@ -17,5 +29,3 @@ function getDB(): mysqli {
     }
     return $conn;
 }
-
-// this is means the sftp working 

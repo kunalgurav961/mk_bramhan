@@ -61,8 +61,9 @@ while ($row = $res->fetch_assoc()) $profiles[] = $row;
         </div>
     </header>
 
-    <!-- SEARCH BAR -->
-    <div class="search-box">
+    <!-- SEARCH BOX -->
+    <div class="search-box" id="searchBox">
+
         <!-- General search -->
         <div class="search-input-wrap">
             <input
@@ -90,7 +91,36 @@ while ($row = $res->fetch_assoc()) $profiles[] = $row;
             >
             <span class="search-icon">📞</span>
         </div>
+
+        <!-- FILTER BAR -->
+        <div class="filter-bar" id="filterBar" role="group" aria-label="Filters">
+
+            <!-- Gender filter chips -->
+            <div class="filter-group">
+                <button class="filter-chip active" id="genderAll"   data-gender=""  aria-pressed="true">सर्व</button>
+                <button class="filter-chip"         id="genderBoy"  data-gender="1" aria-pressed="false">👦 मुलगा</button>
+                <button class="filter-chip"         id="genderGirl" data-gender="0" aria-pressed="false">👧 मुलगी</button>
+            </div>
+
+            <!-- Sort controls -->
+            <div class="filter-group sort-group">
+                <span class="filter-label">क्रमवारी:</span>
+                <select id="sortBy" aria-label="Sort by column">
+                    <option value="id"            selected>नोंद क्र.</option>
+                    <option value="name">नाव</option>
+                    <option value="birth_year">वर्ष</option>
+                    <option value="city">शहर</option>
+                </select>
+                <button class="sort-dir-btn" id="sortDirBtn" data-dir="DESC" title="Sort direction" aria-label="Toggle sort direction">
+                    <span class="sort-icon">↓</span>
+                </button>
+            </div>
+
+        </div>
+        <!-- /FILTER BAR -->
+
     </div>
+    <!-- /SEARCH BOX -->
 
     <!-- SECTION TAG -->
     <div class="section-tag" id="sectionTag">
@@ -138,9 +168,9 @@ while ($row = $res->fetch_assoc()) $profiles[] = $row;
                     onkeydown="if(event.key==='Enter')openProfile(<?= (int)$row['id'] ?>)">
                     <td>
                         <?php if ((int)$row['gender'] === 1): ?>
-                            <span class="gender-m">1</span>
+                            <span class="gender-m">मुलगा</span>
                         <?php else: ?>
-                            <span class="gender-f">0</span>
+                            <span class="gender-f">मुलगी</span>
                         <?php endif; ?>
                     </td>
                     <td><?= htmlspecialchars($row['birth_year']) ?></td>

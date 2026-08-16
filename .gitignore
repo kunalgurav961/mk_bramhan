@@ -1,0 +1,21 @@
+# MK Brahman — .gitignore
+
+# ── Secrets / Credentials ────────────────────────────────────────
+.env.php
+.env
+.env.*
+
+# ── Uploads (user data — do NOT commit) ──────────────────────────
+uploads/profiles/
+
+# ── Editor / OS ──────────────────────────────────────────────────
+.vscode/settings.json
+.DS_Store
+Thumbs.db
+
+# ── Logs ─────────────────────────────────────────────────────────
+*.log
+
+# ── Misc ─────────────────────────────────────────────────────────
+*.bak
+*.tmp

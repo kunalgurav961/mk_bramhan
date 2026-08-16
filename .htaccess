@@ -1,0 +1,35 @@
+# MK Brahman — Apache Security Rules
+
+# ── Block direct access to sensitive files ───────────────────────
+<FilesMatch "^\.env\.php$|^\.env$|^db\.php$|^config\.php$|^\.secrets|migrate.*\.sql$|schema\.sql$|appscript_essentials\.json$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# ── Block access to .git and hidden directories ───────────────────
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Block .git access
+    RewriteRule ^\.git(/.*)?$ - [F,L]
+
+    # Block .secrets directory
+    RewriteRule ^\.secrets(/.*)?$ - [F,L]
+</IfModule>
+
+# ── Disable directory listing ─────────────────────────────────────
+Options -Indexes
+
+# ── Security headers ──────────────────────────────────────────────
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# ── PHP error display off in production ───────────────────────────
+<IfModule mod_php.c>
+    php_flag display_errors off
+    php_flag log_errors on
+</IfModule>
