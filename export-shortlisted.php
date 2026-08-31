@@ -7,6 +7,7 @@
  */
 session_start();
 require_once 'includes/db.php';
+require_once 'includes/format-helpers.php';
 
 $conn = getDB();
 
@@ -15,7 +16,7 @@ $conn = getDB();
 
 $stmt = $conn->prepare("
     SELECT registration_no, name, gender, birth_year,
-           gotra, height_ft, height_in, salary,
+           gotra, height_ft, height_in, salary, weight,
            education, occupation, city
     FROM   profiles
     WHERE  shortlisted = 1
@@ -46,6 +47,7 @@ fputcsv($out, [
     'जन्म वर्ष',
     'गोत्र',
     'उंची',
+    'वजन (kg)',
     'पगार (लाख)',
     'शिक्षण',
     'व्यवसाय',
@@ -55,10 +57,10 @@ fputcsv($out, [
 // Data rows
 while ($row = $result->fetch_assoc()) {
     $gender   = ((int)$row['gender'] === 1) ? '1' : '0';
-    $by       = (int)$row['birth_year'];
-    $fullYear = ($by >= 0 && $by <= 30) ? "20{$row['birth_year']}" : "19{$row['birth_year']}";
+    $fullYear = resolveFullYear($row['birth_year']);
     $height   = (int)$row['height_ft'] . "'" . (int)$row['height_in'] . '"';
     $salary   = $row['salary'] ? $row['salary'] . ' लाख' : '—';
+    $weight   = (int)($row['weight'] ?? 0) > 0 ? (int)$row['weight'] : '—';
 
     fputcsv($out, [
         $row['registration_no'],
@@ -67,6 +69,7 @@ while ($row = $result->fetch_assoc()) {
         $fullYear,
         $row['gotra'],
         $height,
+        $weight,
         $salary,
         $row['education'] ?: '—',
         $row['occupation'] ?: '—',

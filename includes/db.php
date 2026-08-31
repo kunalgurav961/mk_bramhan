@@ -26,6 +26,12 @@ function getDB(): mysqli {
             die('Database connection error. Please contact administrator.');
         }
         $conn->set_charset('utf8mb4');
+
+        // Auto-migration: ensure 'weight' column exists in profiles table
+        $chk = $conn->query("SHOW COLUMNS FROM `profiles` LIKE 'weight'");
+        if ($chk && $chk->num_rows === 0) {
+            $conn->query("ALTER TABLE `profiles` ADD COLUMN `weight` SMALLINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Weight in kg' AFTER `salary`");
+        }
     }
     return $conn;
 }

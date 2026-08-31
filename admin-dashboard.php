@@ -7,6 +7,7 @@ if (!isset($_SESSION['admin_id'])) {
 }
 
 require_once 'includes/db.php';
+require_once 'includes/format-helpers.php';
 $conn = getDB();
 
 // Stats (single query for efficiency)
@@ -31,7 +32,7 @@ $like   = "%$search%";
 
 $stmt = $conn->prepare("
     SELECT id, gender, birth_year, name, gotra, height_ft, height_in,
-           salary, education, city, registration_no, shortlisted
+           salary, weight, education, city, registration_no, shortlisted, jaat
     FROM   profiles
     WHERE  (name LIKE ? OR city LIKE ? OR gotra LIKE ? OR registration_no LIKE ?)
       AND  status != 'Inactive'
@@ -163,20 +164,18 @@ $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin');
             <thead>
                 <tr>
                     <th>M/F</th>
-                    <th>वर्ष</th>
-                    <th>नाव</th>
-                    <th>गोत्र</th>
-                    <th>उंची</th>
+                    <th>नाव. जात</th>
+                    <th>उंची / वजन</th>
                     <th>पगार</th>
                     <th>शहर</th>
-                    <th>नोंद</th>
+                    <th>जन्म / रजिस्टर no</th>
                     <th>⚙</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($profiles)): ?>
                 <tr>
-                    <td colspan="9" class="text-center py-8 text-gray-400">
+                    <td colspan="7" class="text-center py-8 text-gray-400">
                         <div class="text-3xl mb-2">🔍</div>
                         कोणतीही प्रोफाइल सापडली नाही
                     </td>
@@ -196,13 +195,11 @@ $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin');
                             <span class="gender-f">2</span>
                         <?php endif; ?>
                     </td>
-                    <td><?= htmlspecialchars($row['birth_year']) ?></td>
-                    <td class="max-w-[70px] overflow-hidden text-ellipsis"><?= htmlspecialchars($row['name']) ?></td>
-                    <td><?= htmlspecialchars($row['gotra']) ?></td>
-                    <td><?= (int)$row['height_ft'] ?>'<?= (int)$row['height_in'] ?>"</td>
+                    <td class="max-w-[70px] overflow-hidden text-ellipsis"><?= htmlspecialchars(fmtNameJaat($row['name'], $row['jaat'] ?? '')) ?></td>
+                    <td><?= htmlspecialchars(fmtHeightWeight((int)$row['height_ft'], (int)$row['height_in'], $row['weight'] ?? 0)) ?></td>
                     <td><?= htmlspecialchars($row['salary']) ?>L</td>
                     <td><?= htmlspecialchars($row['city']) ?></td>
-                    <td><?= htmlspecialchars($row['registration_no']) ?></td>
+                    <td><?= htmlspecialchars(fmtBirthReg($row['birth_year'], $row['registration_no'])) ?></td>
                     <td onclick="event.stopPropagation()">
                         <div class="flex gap-1">
                             <a href="edit-profile.php?id=<?= (int)$row['id'] ?>"

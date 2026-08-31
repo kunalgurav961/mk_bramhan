@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS `profiles` (
     `height_ft`       TINYINT UNSIGNED  NOT NULL DEFAULT 5,
     `height_in`       TINYINT UNSIGNED  NOT NULL DEFAULT 0,
     `salary`          SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+    `weight`          SMALLINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Weight in kg',
     `education`       VARCHAR(100)      DEFAULT NULL,
     `occupation`      VARCHAR(100)      DEFAULT NULL,
     `city`            VARCHAR(80)       NOT NULL,

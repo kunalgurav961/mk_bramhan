@@ -25,6 +25,7 @@ if (isset($_POST['save'])) {
     $height_ft       = (int)($_POST['height_ft'] ?? 5);
     $height_in       = (int)($_POST['height_in'] ?? 0);
     $salary          = (int)($_POST['salary'] ?? 0);
+    $weight          = (int)($_POST['weight'] ?? 0);
     $education       = trim($_POST['education'] ?? '');
     $occupation      = trim($_POST['occupation'] ?? '');
     $city            = trim($_POST['city'] ?? '');
@@ -79,14 +80,14 @@ if (isset($_POST['save'])) {
             $stmt = $conn->prepare("
                 INSERT INTO profiles
                     (registration_no, gender, birth_year, name, gotra,
-                     height_ft, height_in, salary, education, occupation, city,
+                     height_ft, height_in, salary, weight, education, occupation, city,
                      mobile_no, father_name, mother_name, family_details, about_me, profile_image)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             $stmt->bind_param(
-                'ssissiiisssssssss',
+                'ssissiiiisssssssss',
                 $registration_no, $gender, $birth_year, $name, $gotra,
-                $height_ft, $height_in, $salary, $education, $occupation, $city,
+                $height_ft, $height_in, $salary, $weight, $education, $occupation, $city,
                 $mobile_no, $father_name, $mother_name, $family_details, $about_me, $primaryImg
             );
             $stmt->execute();
@@ -322,6 +323,14 @@ if (isset($_POST['save'])) {
                 <input type="number" id="salary" name="salary" class="field"
                        placeholder="उदा. 5 (= 5 लाख)"
                        min="0" value="<?= htmlspecialchars($_POST['salary'] ?? '') ?>">
+            </div>
+
+            <!-- Weight -->
+            <div>
+                <label class="field-label" for="weight">वजन (kg)</label>
+                <input type="number" id="weight" name="weight" class="field"
+                       placeholder="उदा. 70"
+                       min="0" max="200" value="<?= htmlspecialchars($_POST['weight'] ?? '') ?>">
             </div>
 
             <!-- Education -->

@@ -1,12 +1,13 @@
 <?php
 session_start();
 require_once 'includes/db.php';
+require_once 'includes/format-helpers.php';
 $conn = getDB();
 
 $result = $conn->query("
     SELECT id, gender, birth_year, name, gotra, height_ft, height_in,
-           salary, education, city, registration_no, shortlisted,
-           COALESCE(profile_image, profile_photo) AS img_file
+           salary, weight, education, city, registration_no, shortlisted,
+           jaat, COALESCE(profile_image, profile_photo) AS img_file
     FROM   profiles
     WHERE  shortlisted = 1
     ORDER  BY id DESC
@@ -82,21 +83,19 @@ $totalCount = count($profiles);
             <thead>
                 <tr>
                     <th>M/F</th>
-                    <th>वर्ष</th>
-                    <th>नाव</th>
-                    <th>गोत्र</th>
-                    <th>उंची</th>
+                    <th>नाव. जात</th>
+                    <th>उंची / वजन</th>
                     <th>पगार</th>
                     <th>शिक्षण</th>
                     <th>शहर</th>
-                    <th>नोंद</th>
+                    <th>जन्म / रजिस्टर no</th>
                     <th>❤</th>
                 </tr>
             </thead>
             <tbody id="results">
                 <?php if (empty($profiles)): ?>
                 <tr>
-                    <td colspan="10">
+                    <td colspan="8">
                         <div class="empty-state">
                             <div class="empty-icon">💔</div>
                             <h3>शॉर्टलिस्ट रिकामी आहे</h3>
@@ -121,14 +120,12 @@ $totalCount = count($profiles);
                             <span class="gender-f">0</span>
                         <?php endif; ?>
                     </td>
-                    <td><?= htmlspecialchars($row['birth_year']) ?></td>
-                    <td><?= htmlspecialchars($row['name']) ?></td>
-                    <td><?= htmlspecialchars($row['gotra']) ?></td>
-                    <td><?= (int)$row['height_ft'] ?>'<?= (int)$row['height_in'] ?>"</td>
+                    <td><?= htmlspecialchars(fmtNameJaat($row['name'], $row['jaat'] ?? '')) ?></td>
+                    <td><?= htmlspecialchars(fmtHeightWeight((int)$row['height_ft'], (int)$row['height_in'], $row['weight'] ?? 0)) ?></td>
                     <td><?= htmlspecialchars($row['salary']) ?>L</td>
                     <td><?= htmlspecialchars($row['education']) ?></td>
                     <td><?= htmlspecialchars($row['city']) ?></td>
-                    <td><?= htmlspecialchars($row['registration_no']) ?></td>
+                    <td><?= htmlspecialchars(fmtBirthReg($row['birth_year'], $row['registration_no'])) ?></td>
                     <td class="col-heart" onclick="event.stopPropagation()">
                         <button class="shortlist-btn"
                                 data-id="<?= (int)$row['id'] ?>"

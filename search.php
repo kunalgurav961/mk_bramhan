@@ -16,6 +16,7 @@
 
 require_once 'includes/db.php';
 require_once 'includes/transliteration.php';
+require_once 'includes/format-helpers.php';
 
 header('Content-Type: text/html; charset=utf-8');
 
@@ -122,8 +123,8 @@ $orderSQL = "ORDER BY `{$sortBy}` {$sortDir}";
 
 $sql = "
     SELECT id, gender, birth_year, name, gotra, height_ft, height_in,
-           salary, education, city, registration_no, shortlisted,
-           profile_image, profile_photo, mobile_no,
+           salary, weight, education, city, registration_no, shortlisted,
+           jaat, profile_image, profile_photo, mobile_no,
            COALESCE(mobile_no, mobile) AS display_mobile
     FROM   profiles
     {$whereSQL}
@@ -159,7 +160,7 @@ function getImgSrc(array $row): string {
 
 if (empty($rows)): ?>
 <tr>
-    <td colspan="10" style="text-align:center;padding:36px;color:#9ca3af;font-size:13px;">
+    <td colspan="8" style="text-align:center;padding:36px;color:#9ca3af;font-size:13px;">
         <div style="font-size:36px;margin-bottom:8px;"><?= $shortlisted ? '💔' : '🔍' ?></div>
         <div><?= $shortlisted ? 'शॉर्टलिस्ट रिकामी आहे' : 'कोणतीही प्रोफाइल सापडली नाही' ?></div>
     </td>
@@ -180,14 +181,12 @@ if (empty($rows)): ?>
             <span class="gender-f">मुलगी</span>
         <?php endif; ?>
     </td>
-    <td><?= htmlspecialchars($row['birth_year']) ?></td>
-    <td style="max-width:80px;overflow:hidden;text-overflow:ellipsis;"><?= htmlspecialchars($row['name']) ?></td>
-    <td><?= htmlspecialchars($row['gotra']) ?></td>
-    <td><?= (int)$row['height_ft'] ?>'<?= (int)$row['height_in'] ?>"</td>
+    <td><?= htmlspecialchars(fmtNameJaat($row['name'], $row['jaat'] ?? '')) ?></td>
+    <td><?= htmlspecialchars(fmtHeightWeight((int)$row['height_ft'], (int)$row['height_in'], $row['weight'] ?? 0)) ?></td>
     <td><?= htmlspecialchars($row['salary']) ?>L</td>
     <td style="max-width:70px;overflow:hidden;text-overflow:ellipsis;"><?= htmlspecialchars($row['education']) ?></td>
     <td><?= htmlspecialchars($row['city']) ?></td>
-    <td><?= htmlspecialchars($row['registration_no']) ?></td>
+    <td><?= htmlspecialchars(fmtBirthReg($row['birth_year'], $row['registration_no'])) ?></td>
     <td class="col-heart" onclick="event.stopPropagation()">
         <button class="shortlist-btn"
                 data-id="<?= (int)$row['id'] ?>"

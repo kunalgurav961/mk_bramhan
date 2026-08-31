@@ -5,6 +5,7 @@
  */
 session_start();
 require_once 'includes/db.php';
+require_once 'includes/format-helpers.php';
 
 $conn = getDB();
 $id   = (int)($_GET['id'] ?? 0);
@@ -17,7 +18,7 @@ if ($id <= 0) {
 // Single optimized query
 $stmt = $conn->prepare("
     SELECT id, registration_no, gender, birth_year, name, gotra,
-           height_ft, height_in, salary, education, occupation, city,
+           height_ft, height_in, salary, weight, education, occupation, city,
            father_name, mother_name, family_details, about_me,
            shortlisted, created_at, status,
            mobile_no, mobile, mobile_2, mobile_3, mobile_4,
@@ -61,8 +62,7 @@ $genderText = ((int)$p['gender'] === 1) ? 'मुलगा' : 'मुलगी';
 $genderClass= ((int)$p['gender'] === 1) ? 'gender-m' : 'gender-f';
 
 // Birth year: 95 → 1995, 01 → 2001
-$by = (int)$p['birth_year'];
-$fullYear = ($by >= 0 && $by <= 30) ? "20{$p['birth_year']}" : "19{$p['birth_year']}";
+$fullYear = resolveFullYear($p['birth_year']);
 
 // Salary formatting
 function fmtSalary(int $lakh): string {
@@ -575,7 +575,7 @@ if (str_contains($backUrl, 'admin-dashboard')) $backLabel = 'Admin Dashboard';
 
             <div class="info-row">
                 <span class="info-label">जन्म वर्ष</span>
-                <span class="info-value"><?= htmlspecialchars($fullYear) ?> (<?= htmlspecialchars($p['birth_year']) ?>)</span>
+                <span class="info-value"><?= htmlspecialchars($fullYear) ?></span>
             </div>
             <div class="info-row">
                 <span class="info-label">गोत्र</span>
@@ -597,6 +597,12 @@ if (str_contains($backUrl, 'admin-dashboard')) $backLabel = 'Admin Dashboard';
                 <span class="info-label">उंची</span>
                 <span class="info-value"><?= (int)$p['height_ft'] ?>'<?= (int)$p['height_in'] ?>"</span>
             </div>
+            <?php if ((int)($p['weight'] ?? 0) > 0): ?>
+            <div class="info-row">
+                <span class="info-label">वजन</span>
+                <span class="info-value"><?= (int)$p['weight'] ?> kg</span>
+            </div>
+            <?php endif; ?>
             <div class="info-row">
                 <span class="info-label">शहर</span>
                 <span class="info-value"><?= htmlspecialchars($p['city'] ?: '—') ?></span>

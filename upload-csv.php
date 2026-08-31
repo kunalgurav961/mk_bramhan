@@ -24,7 +24,7 @@ $conn = getDB();
 const REQUIRED_COLS = ['registration_no', 'gender', 'birth_year', 'name', 'gotra', 'city'];
 const ALL_COLS      = [
     'registration_no', 'gender', 'birth_year', 'name', 'gotra',
-    'height_ft', 'height_in', 'salary', 'education', 'occupation', 'city',
+    'height_ft', 'height_in', 'salary', 'weight', 'education', 'occupation', 'city',
     'father_name', 'mother_name', 'family_details', 'about_me',
 ];
 
@@ -117,9 +117,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['do_import'])) {
         $stmt = $conn->prepare("
             INSERT INTO profiles
                 (registration_no, gender, birth_year, name, gotra,
-                 height_ft, height_in, salary, education, occupation, city,
+                 height_ft, height_in, salary, weight, education, occupation, city,
                  father_name, mother_name, family_details, about_me)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
 
         $conn->begin_transaction();
@@ -151,6 +151,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['do_import'])) {
             $heightFt    = (int)($row['height_ft'] ?? 5);
             $heightIn    = (int)($row['height_in'] ?? 0);
             $salary      = (int)($row['salary'] ?? 0);
+            $weight      = (int)($row['weight'] ?? 0);
             $education   = trim($row['education'] ?? '');
             $occupation  = trim($row['occupation'] ?? '');
             $city        = trim($row['city'] ?? '');
@@ -159,9 +160,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['do_import'])) {
             $familyDet   = trim($row['family_details'] ?? '');
             $aboutMe     = trim($row['about_me'] ?? '');
 
-            $stmt->bind_param('sisssiiisssssss',
+            $stmt->bind_param('sisssiiiiissssss',
                 $regNo, $gender, $birthYear, $name, $gotra,
-                $heightFt, $heightIn, $salary, $education, $occupation, $city,
+                $heightFt, $heightIn, $salary, $weight, $education, $occupation, $city,
                 $fatherName, $motherName, $familyDet, $aboutMe
             );
 

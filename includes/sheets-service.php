@@ -199,21 +199,22 @@ class SheetsService {
 
         } else {
             // INSERT
+            $weight = 0;
             $stmt = $conn->prepare("
                 INSERT INTO profiles
                     (registration_no, gender, birth_year, name, gotra,
-                     height_ft, height_in, salary, education, city,
+                     height_ft, height_in, salary, weight, education, city,
                      jaat, rashi, mobile_no, mobile_2, mobile_3, mobile_4,
                      sheet_img_1, sheet_img_2, sheet_img_3, sheet_img_4,
                      profile_image, status, sheets_synced_at)
-                VALUES (?, ?, ?, ?, ?,  ?, ?, ?, ?, ?,  ?, ?, ?, ?, ?,  ?,
+                VALUES (?, ?, ?, ?, ?,  ?, ?, ?, ?, ?, ?,  ?, ?, ?, ?, ?,  ?,
                         ?, ?, ?, ?,  ?, 1, NOW())
             ");
-            // Format: s(reg) i(gender) sss(birthYr,name,gotra) iii(ft,in,salary) s×13(education…imgFile)
+            // Format: s(reg) i(gender) sss(birthYr,name,gotra) iiii(ft,in,salary,weight) s×13(education…imgFile)
             $stmt->bind_param(
-                'sisssiiisssssssssssss',
+                'sisssiiiisssssssssssss',
                 $reg, $gender, $birthYr, $name, $gotra,
-                $heightFt, $heightIn, $salary, $education, $city,
+                $heightFt, $heightIn, $salary, $weight, $education, $city,
                 $jaat, $rashi, $mob1, $mob2, $mob3, $mob4,
                 $img1, $img2, $img3, $img4, $imgFile
             );

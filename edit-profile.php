@@ -122,6 +122,7 @@ if (isset($_POST['update'])) {
     $height_ft       = (int)($_POST['height_ft'] ?? 5);
     $height_in       = (int)($_POST['height_in'] ?? 0);
     $salary          = (int)($_POST['salary'] ?? 0);
+    $weight          = (int)($_POST['weight'] ?? 0);
     $education       = trim($_POST['education'] ?? '');
     $occupation      = trim($_POST['occupation'] ?? '');
     $city            = trim($_POST['city'] ?? '');
@@ -143,22 +144,22 @@ if (isset($_POST['update'])) {
             $stmt = $conn->prepare("
                 UPDATE profiles SET
                     registration_no=?, gender=?, birth_year=?, name=?, gotra=?,
-                    height_ft=?, height_in=?, salary=?,
+                    height_ft=?, height_in=?, salary=?, weight=?,
                     education=?, occupation=?, city=?,
                     mobile_no=?,
                     father_name=?, mother_name=?, family_details=?, about_me=?,
                     updated_at=NOW()
                 WHERE id=?
             ");
-            $stmt->bind_param('ssissiiissssssssi',
+            $stmt->bind_param('ssissiiiissssssssi',
                 $registration_no, $gender, $birth_year, $name, $gotra,
-                $height_ft, $height_in, $salary, $education, $occupation, $city,
+                $height_ft, $height_in, $salary, $weight, $education, $occupation, $city,
                 $mobile_no, $father_name, $mother_name, $family_details, $about_me, $id
             );
             $stmt->execute();
             $success = 'प्रोफाइल यशस्वीरित्या अपडेट केली! ✅';
             $profile = array_merge($profile, compact('registration_no','gender','birth_year','name','gotra',
-                'height_ft','height_in','salary','education','occupation','city',
+                'height_ft','height_in','salary','weight','education','occupation','city',
                 'mobile_no','father_name','mother_name','family_details','about_me'));
         } catch (\mysqli_sql_exception $e) {
             $errors[] = $e->getCode() === 1062
@@ -320,6 +321,10 @@ $existingImages = fetchImages($conn, $id);
             <div>
                 <label class="field-label">पगार (लाख/वर्ष)</label>
                 <input type="number" name="salary" class="field" min="0" value="<?= val('salary',$profile) ?>">
+            </div>
+            <div>
+                <label class="field-label">वजन (kg)</label>
+                <input type="number" name="weight" class="field" min="0" max="200" placeholder="उदा. 70" value="<?= val('weight',$profile) ?>">
             </div>
             <div>
                 <label class="field-label">शिक्षण</label>
