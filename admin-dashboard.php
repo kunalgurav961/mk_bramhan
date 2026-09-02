@@ -190,9 +190,9 @@ $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin');
                     onkeydown="if(event.key==='Enter')openProfileAdmin(<?= (int)$row['id'] ?>)">
                     <td>
                         <?php if ((int)$row['gender'] === 1): ?>
-                            <span class="gender-m">1</span>
+                            <span class="gender-m">मुलगा</span>
                         <?php else: ?>
-                            <span class="gender-f">2</span>
+                            <span class="gender-f">मुलगी</span>
                         <?php endif; ?>
                     </td>
                     <td class="max-w-[70px] overflow-hidden text-ellipsis"><?= htmlspecialchars(fmtNameJaat($row['name'], $row['jaat'] ?? '')) ?></td>
