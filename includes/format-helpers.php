@@ -37,8 +37,38 @@ function fmtNameJaat(string $name, string $jaat): string {
 }
 
 /**
- * Format birth_year + registration_no: "2001.12"
- * Uses full resolved year.
+ * Format salary stored in thousands for short display.
+ * Examples: 0 → '—', 30 → '30k', 300 → '300k', 1000 → '10L', 1550 → '15.5L'
+ * The DB stores salary in thousands (30 = ₹30,000).
+ */
+function fmtSalaryShort(int $val): string {
+    if ($val <= 0) return '—';
+    if ($val < 100) return $val . 'k';            // 30 → 30k
+    if ($val < 1000) return $val . 'k';           // 300 → 300k
+    // >= 1000 → lakhs (divide by 100)
+    $lakhs = $val / 100;
+    if ($lakhs == floor($lakhs)) {
+        return (int)$lakhs . 'L';                 // 1000 → 10L
+    }
+    return rtrim(rtrim(number_format($lakhs, 1), '0'), '.') . 'L';  // 1550 → 15.5L
+}
+
+/**
+ * Format नोंदणी क्रमांक: "registrationYear.regNo" (e.g. "1993.01")
+ * Falls back to just regNo if regYear is empty.
+ */
+function fmtNondaniKramank(string $regYear, string $regNo): string {
+    $regYear = trim($regYear);
+    $regNo   = trim($regNo);
+    if ($regYear !== '') {
+        return $regYear . '.' . $regNo;
+    }
+    return $regNo;
+}
+
+/**
+ * @deprecated Use fmtNondaniKramank() instead.
+ * Kept for backward compatibility during transition.
  */
 function fmtBirthReg(string $birthYear, string $regNo): string {
     return resolveFullYear($birthYear) . '.' . $regNo;

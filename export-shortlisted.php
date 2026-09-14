@@ -15,8 +15,8 @@ $conn = getDB();
 // if (!isset($_SESSION['admin_id'])) { header('Location: login.php'); exit; }
 
 $stmt = $conn->prepare("
-    SELECT registration_no, name, gender, birth_year,
-           gotra, height_ft, height_in, salary, weight,
+    SELECT registration_no, registration_year, name, gender, birth_year,
+           gotra, height_ft, height_in, salary, weight, varn, chashma,
            education, occupation, city
     FROM   profiles
     WHERE  shortlisted = 1
@@ -42,13 +42,16 @@ $out = fopen('php://output', 'w');
 // Header row
 fputcsv($out, [
     'नोंदणी क्र.',
+    'नोंदणी वर्ष',
     'नाव',
     'लिंग',
     'जन्म वर्ष',
     'गोत्र',
     'उंची',
     'वजन (kg)',
-    'पगार (लाख)',
+    'वर्ण',
+    'चष्मा',
+    'पगार',
     'शिक्षण',
     'व्यवसाय',
     'शहर',
@@ -59,17 +62,22 @@ while ($row = $result->fetch_assoc()) {
     $gender   = ((int)$row['gender'] === 1) ? '1' : '0';
     $fullYear = resolveFullYear($row['birth_year']);
     $height   = (int)$row['height_ft'] . "'" . (int)$row['height_in'] . '"';
-    $salary   = $row['salary'] ? $row['salary'] . ' लाख' : '—';
+    $salary   = $row['salary'] ? fmtSalaryShort((int)$row['salary']) : '—';
     $weight   = (int)($row['weight'] ?? 0) > 0 ? (int)$row['weight'] : '—';
+    $varn     = $row['varn'] ?? '—';
+    $chashma  = ((int)($row['chashma'] ?? 0) === 1) ? 'हो' : 'नाही';
 
     fputcsv($out, [
         $row['registration_no'],
+        $row['registration_year'] ?? '',
         $row['name'],
         $gender,
         $fullYear,
         $row['gotra'],
         $height,
         $weight,
+        $varn,
+        $chashma,
         $salary,
         $row['education'] ?: '—',
         $row['occupation'] ?: '—',

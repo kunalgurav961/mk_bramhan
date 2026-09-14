@@ -17,8 +17,8 @@ if ($id <= 0) {
 
 // Single optimized query
 $stmt = $conn->prepare("
-    SELECT id, registration_no, gender, birth_year, name, gotra,
-           height_ft, height_in, salary, weight, education, occupation, city,
+    SELECT id, registration_no, registration_year, gender, birth_year, name, gotra,
+           height_ft, height_in, salary, weight, varn, chashma, education, occupation, city,
            father_name, mother_name, family_details, about_me,
            shortlisted, created_at, status,
            mobile_no, mobile, mobile_2, mobile_3, mobile_4,
@@ -65,9 +65,9 @@ $genderClass= ((int)$p['gender'] === 1) ? 'gender-m' : 'gender-f';
 $fullYear = resolveFullYear($p['birth_year']);
 
 // Salary formatting
-function fmtSalary(int $lakh): string {
-    if ($lakh === 0) return 'उपलब्ध नाही';
-    return "{$lakh} लाख/वर्ष";
+function fmtSalary(int $val): string {
+    if ($val === 0) return 'उपलब्ध नाही';
+    return fmtSalaryShort($val) . '/वर्ष';
 }
 
 // Build gallery list — fall back to single img_file if no rows in profile_images
@@ -603,6 +603,16 @@ if (str_contains($backUrl, 'admin-dashboard')) $backLabel = 'Admin Dashboard';
                 <span class="info-value"><?= (int)$p['weight'] ?> kg</span>
             </div>
             <?php endif; ?>
+            <?php if (!empty($p['varn'])): ?>
+            <div class="info-row">
+                <span class="info-label">वर्ण</span>
+                <span class="info-value"><?= htmlspecialchars($p['varn']) ?></span>
+            </div>
+            <?php endif; ?>
+            <div class="info-row">
+                <span class="info-label">चष्मा</span>
+                <span class="info-value"><?= ((int)($p['chashma'] ?? 0) === 1) ? 'हो' : 'नाही' ?></span>
+            </div>
             <div class="info-row">
                 <span class="info-label">शहर</span>
                 <span class="info-value"><?= htmlspecialchars($p['city'] ?: '—') ?></span>

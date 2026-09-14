@@ -45,6 +45,7 @@ USE `mk_brahman`;
 CREATE TABLE IF NOT EXISTS `profiles` (
     `id`              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `registration_no` VARCHAR(30)       NOT NULL,
+    `registration_year` VARCHAR(4)      DEFAULT NULL COMMENT 'Registration year for nondani kramank',
     `gender`          TINYINT           NOT NULL COMMENT '1=Mulaga,2=Mulagi',
     `birth_year`      VARCHAR(4)        NOT NULL,
     `name`            VARCHAR(100)      NOT NULL,
@@ -53,6 +54,8 @@ CREATE TABLE IF NOT EXISTS `profiles` (
     `height_in`       TINYINT UNSIGNED  NOT NULL DEFAULT 0,
     `salary`          SMALLINT UNSIGNED NOT NULL DEFAULT 0,
     `weight`          SMALLINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Weight in kg',
+    `varn`            VARCHAR(50)       DEFAULT NULL COMMENT 'Skin color / वर्ण',
+    `chashma`         TINYINT(1)        NOT NULL DEFAULT 0 COMMENT 'Glasses yes/no',
     `education`       VARCHAR(100)      DEFAULT NULL,
     `occupation`      VARCHAR(100)      DEFAULT NULL,
     `city`            VARCHAR(80)       NOT NULL,

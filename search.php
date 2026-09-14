@@ -34,7 +34,10 @@ $genderParam = $_GET['gender'] ?? '';
 $genderFilter = in_array($genderParam, ['1', '2'], true) ? (int)$genderParam : null;
 
 // Sort
-$allowedSortCols = ['id', 'name', 'birth_year', 'city', 'registration_no'];
+$allowedSortCols = [
+    'id', 'name', 'birth_year', 'city', 'registration_no',
+    'salary', 'height', 'weight', 'education', 'gender', 'shortlisted', 'jaat'
+];
 $sortBy  = in_array($_GET['sort_by'] ?? '', $allowedSortCols, true)
            ? $_GET['sort_by']
            : 'id';
@@ -119,11 +122,61 @@ if ($mobileSearch) {
 $whereSQL = 'WHERE ' . implode(' AND ', $whereClauses);
 
 // Safe column + direction (validated above)
-$orderSQL = "ORDER BY `{$sortBy}` {$sortDir}";
+switch ($sortBy) {
+    case 'height':
+        $orderSQL = "ORDER BY (height_ft = 0), (height_ft * 12 + height_in) {$sortDir}, id DESC";
+        break;
+    case 'salary':
+        if ($sortDir === 'ASC') {
+            $orderSQL = "ORDER BY (salary = 0 OR salary IS NULL), salary ASC, id DESC";
+        } else {
+            $orderSQL = "ORDER BY salary DESC, id DESC";
+        }
+        break;
+    case 'birth_year':
+        if ($sortDir === 'ASC') {
+            $orderSQL = "ORDER BY (birth_year = '' OR birth_year IS NULL OR birth_year = '0'), CAST(birth_year AS UNSIGNED) ASC, id DESC";
+        } else {
+            $orderSQL = "ORDER BY CAST(birth_year AS UNSIGNED) DESC, id DESC";
+        }
+        break;
+    case 'weight':
+        if ($sortDir === 'ASC') {
+            $orderSQL = "ORDER BY (weight = 0 OR weight IS NULL), weight ASC, id DESC";
+        } else {
+            $orderSQL = "ORDER BY weight DESC, id DESC";
+        }
+        break;
+    case 'name':
+        $orderSQL = "ORDER BY (name = '' OR name IS NULL), name {$sortDir}, id DESC";
+        break;
+    case 'city':
+        $orderSQL = "ORDER BY (city = '' OR city IS NULL), city {$sortDir}, id DESC";
+        break;
+    case 'education':
+        $orderSQL = "ORDER BY (education = '' OR education IS NULL), education {$sortDir}, id DESC";
+        break;
+    case 'registration_no':
+        $orderSQL = "ORDER BY (registration_no = '' OR registration_no IS NULL), LENGTH(registration_no) {$sortDir}, registration_no {$sortDir}, id {$sortDir}";
+        break;
+    case 'gender':
+        $orderSQL = "ORDER BY gender {$sortDir}, id DESC";
+        break;
+    case 'shortlisted':
+        $orderSQL = "ORDER BY shortlisted {$sortDir}, id DESC";
+        break;
+    case 'jaat':
+        $orderSQL = "ORDER BY (jaat = '' OR jaat IS NULL), jaat {$sortDir}, id DESC";
+        break;
+    case 'id':
+    default:
+        $orderSQL = "ORDER BY id {$sortDir}";
+        break;
+}
 
 $sql = "
     SELECT id, gender, birth_year, name, gotra, height_ft, height_in,
-           salary, weight, education, city, registration_no, shortlisted,
+           salary, weight, education, city, registration_no, registration_year, shortlisted,
            jaat, profile_image, profile_photo, mobile_no,
            COALESCE(mobile_no, mobile) AS display_mobile
     FROM   profiles
@@ -183,10 +236,10 @@ if (empty($rows)): ?>
     </td>
     <td><?= htmlspecialchars(fmtNameJaat($row['name'], $row['jaat'] ?? '')) ?></td>
     <td><?= htmlspecialchars(fmtHeightWeight((int)$row['height_ft'], (int)$row['height_in'], $row['weight'] ?? 0)) ?></td>
-    <td><?= htmlspecialchars($row['salary']) ?>L</td>
+    <td><?= fmtSalaryShort((int)$row['salary']) ?></td>
     <td style="max-width:70px;overflow:hidden;text-overflow:ellipsis;"><?= htmlspecialchars($row['education']) ?></td>
     <td><?= htmlspecialchars($row['city']) ?></td>
-    <td><?= htmlspecialchars(fmtBirthReg($row['birth_year'], $row['registration_no'])) ?></td>
+    <td><?= htmlspecialchars(fmtNondaniKramank($row['registration_year'] ?? '', $row['registration_no'])) ?></td>
     <td class="col-heart" onclick="event.stopPropagation()">
         <button class="shortlist-btn"
                 data-id="<?= (int)$row['id'] ?>"

@@ -26,17 +26,76 @@ $totalShortlisted = (int)$statsRes['shortlisted'];
 $totalMale        = (int)$statsRes['male'];
 $totalFemale      = (int)$statsRes['female'];
 
-// Search
+// Search & Sort
 $search = trim($_GET['search'] ?? '');
 $like   = "%$search%";
 
+$allowedSortCols = [
+    'id', 'name', 'birth_year', 'city', 'registration_no',
+    'salary', 'height', 'weight', 'education', 'gender', 'shortlisted', 'jaat'
+];
+$sortBy  = in_array($_GET['sort_by'] ?? '', $allowedSortCols, true) ? $_GET['sort_by'] : 'id';
+$sortDir = strtoupper($_GET['sort_dir'] ?? 'DESC') === 'ASC' ? 'ASC' : 'DESC';
+
+switch ($sortBy) {
+    case 'height':
+        $orderSQL = "ORDER BY (height_ft = 0), (height_ft * 12 + height_in) {$sortDir}, id DESC";
+        break;
+    case 'salary':
+        if ($sortDir === 'ASC') {
+            $orderSQL = "ORDER BY (salary = 0 OR salary IS NULL), salary ASC, id DESC";
+        } else {
+            $orderSQL = "ORDER BY salary DESC, id DESC";
+        }
+        break;
+    case 'birth_year':
+        if ($sortDir === 'ASC') {
+            $orderSQL = "ORDER BY (birth_year = '' OR birth_year IS NULL OR birth_year = '0'), CAST(birth_year AS UNSIGNED) ASC, id DESC";
+        } else {
+            $orderSQL = "ORDER BY CAST(birth_year AS UNSIGNED) DESC, id DESC";
+        }
+        break;
+    case 'weight':
+        if ($sortDir === 'ASC') {
+            $orderSQL = "ORDER BY (weight = 0 OR weight IS NULL), weight ASC, id DESC";
+        } else {
+            $orderSQL = "ORDER BY weight DESC, id DESC";
+        }
+        break;
+    case 'name':
+        $orderSQL = "ORDER BY (name = '' OR name IS NULL), name {$sortDir}, id DESC";
+        break;
+    case 'city':
+        $orderSQL = "ORDER BY (city = '' OR city IS NULL), city {$sortDir}, id DESC";
+        break;
+    case 'education':
+        $orderSQL = "ORDER BY (education = '' OR education IS NULL), education {$sortDir}, id DESC";
+        break;
+    case 'registration_no':
+        $orderSQL = "ORDER BY (registration_no = '' OR registration_no IS NULL), LENGTH(registration_no) {$sortDir}, registration_no {$sortDir}, id {$sortDir}";
+        break;
+    case 'gender':
+        $orderSQL = "ORDER BY gender {$sortDir}, id DESC";
+        break;
+    case 'shortlisted':
+        $orderSQL = "ORDER BY shortlisted {$sortDir}, id DESC";
+        break;
+    case 'jaat':
+        $orderSQL = "ORDER BY (jaat = '' OR jaat IS NULL), jaat {$sortDir}, id DESC";
+        break;
+    case 'id':
+    default:
+        $orderSQL = "ORDER BY id {$sortDir}";
+        break;
+}
+
 $stmt = $conn->prepare("
     SELECT id, gender, birth_year, name, gotra, height_ft, height_in,
-           salary, weight, education, city, registration_no, shortlisted, jaat
+           salary, weight, education, city, registration_no, registration_year, shortlisted, jaat
     FROM   profiles
     WHERE  (name LIKE ? OR city LIKE ? OR gotra LIKE ? OR registration_no LIKE ?)
       AND  status != 'Inactive'
-    ORDER  BY id DESC
+    {$orderSQL}
     LIMIT  200
 ");
 $stmt->bind_param('ssss', $like, $like, $like, $like);
@@ -44,6 +103,13 @@ $stmt->execute();
 $result   = $stmt->get_result();
 $profiles = [];
 while ($row = $result->fetch_assoc()) $profiles[] = $row;
+
+function adminSortUrl($col, $currentSort, $currentDir, $search) {
+    $dir = ($currentSort === $col && $currentDir === 'DESC') ? 'ASC' : 'DESC';
+    $params = ['sort_by' => $col, 'sort_dir' => $dir];
+    if ($search !== '') $params['search'] = $search;
+    return 'admin-dashboard.php?' . http_build_query($params);
+}
 
 $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin');
 ?>
@@ -138,9 +204,9 @@ $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin');
         </div>
     </div>
 
-    <!-- SEARCH -->
+    <!-- SEARCH & SORT -->
     <div class="px-4 pb-3 search-box">
-        <form method="GET">
+        <form method="GET" class="space-y-2">
             <div class="relative">
                 <input
                     type="search"
@@ -150,6 +216,25 @@ $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin');
                     class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm bg-gray-50 pr-10 transition-all"
                 >
                 <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</button>
+            </div>
+            <div class="flex items-center gap-2">
+                <select name="sort_by" onchange="this.form.submit()" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-gray-50 text-gray-700 flex-1">
+                    <option value="id" <?= $sortBy === 'id' ? 'selected' : '' ?>>नोंद क्र. (Newest)</option>
+                    <option value="name" <?= $sortBy === 'name' ? 'selected' : '' ?>>नाव (A-Z)</option>
+                    <option value="birth_year" <?= $sortBy === 'birth_year' ? 'selected' : '' ?>>जन्म वर्ष (Age)</option>
+                    <option value="salary" <?= $sortBy === 'salary' ? 'selected' : '' ?>>पगार (Salary)</option>
+                    <option value="height" <?= $sortBy === 'height' ? 'selected' : '' ?>>उंची (Height)</option>
+                    <option value="weight" <?= $sortBy === 'weight' ? 'selected' : '' ?>>वजन (Weight)</option>
+                    <option value="education" <?= $sortBy === 'education' ? 'selected' : '' ?>>शिक्षण (Education)</option>
+                    <option value="city" <?= $sortBy === 'city' ? 'selected' : '' ?>>शहर (City)</option>
+                    <option value="registration_no" <?= $sortBy === 'registration_no' ? 'selected' : '' ?>>रजिस्टर क्र.</option>
+                </select>
+                <input type="hidden" name="sort_dir" value="<?= htmlspecialchars($sortDir) ?>">
+                <button type="button" onclick="this.form.sort_dir.value = (this.form.sort_dir.value === 'ASC' ? 'DESC' : 'ASC'); this.form.submit();"
+                        class="text-xs px-2.5 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg font-bold text-gray-700 border border-gray-200"
+                        title="Toggle Sort Direction">
+                    <?= $sortDir === 'ASC' ? '↑ A-Z' : '↓ Z-A' ?>
+                </button>
             </div>
         </form>
     </div>
@@ -163,12 +248,42 @@ $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin');
         <table class="compact-admin-table">
             <thead>
                 <tr>
-                    <th>M/F</th>
-                    <th>नाव. जात</th>
-                    <th>उंची / वजन</th>
-                    <th>पगार</th>
-                    <th>शहर</th>
-                    <th>जन्म / रजिस्टर no</th>
+                    <th class="cursor-pointer hover:bg-[#252542]">
+                        <a href="<?= adminSortUrl('gender', $sortBy, $sortDir, $search) ?>" class="flex items-center justify-between gap-1 text-white no-underline">
+                            <span>M/F</span>
+                            <span class="text-[9px] text-amber-300"><?= $sortBy === 'gender' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span>
+                        </a>
+                    </th>
+                    <th class="cursor-pointer hover:bg-[#252542]">
+                        <a href="<?= adminSortUrl('name', $sortBy, $sortDir, $search) ?>" class="flex items-center justify-between gap-1 text-white no-underline">
+                            <span>नाव. जात</span>
+                            <span class="text-[9px] text-amber-300"><?= $sortBy === 'name' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span>
+                        </a>
+                    </th>
+                    <th class="cursor-pointer hover:bg-[#252542]">
+                        <a href="<?= adminSortUrl('height', $sortBy, $sortDir, $search) ?>" class="flex items-center justify-between gap-1 text-white no-underline">
+                            <span>उंची / वजन</span>
+                            <span class="text-[9px] text-amber-300"><?= $sortBy === 'height' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span>
+                        </a>
+                    </th>
+                    <th class="cursor-pointer hover:bg-[#252542]">
+                        <a href="<?= adminSortUrl('salary', $sortBy, $sortDir, $search) ?>" class="flex items-center justify-between gap-1 text-white no-underline">
+                            <span>पगार</span>
+                            <span class="text-[9px] text-amber-300"><?= $sortBy === 'salary' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span>
+                        </a>
+                    </th>
+                    <th class="cursor-pointer hover:bg-[#252542]">
+                        <a href="<?= adminSortUrl('city', $sortBy, $sortDir, $search) ?>" class="flex items-center justify-between gap-1 text-white no-underline">
+                            <span>शहर</span>
+                            <span class="text-[9px] text-amber-300"><?= $sortBy === 'city' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span>
+                        </a>
+                    </th>
+                    <th class="cursor-pointer hover:bg-[#252542]">
+                        <a href="<?= adminSortUrl('birth_year', $sortBy, $sortDir, $search) ?>" class="flex items-center justify-between gap-1 text-white no-underline">
+                            <span>नोंदणी क्र.</span>
+                            <span class="text-[9px] text-amber-300"><?= $sortBy === 'birth_year' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span>
+                        </a>
+                    </th>
                     <th>⚙</th>
                 </tr>
             </thead>
@@ -197,9 +312,9 @@ $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin');
                     </td>
                     <td class="max-w-[70px] overflow-hidden text-ellipsis"><?= htmlspecialchars(fmtNameJaat($row['name'], $row['jaat'] ?? '')) ?></td>
                     <td><?= htmlspecialchars(fmtHeightWeight((int)$row['height_ft'], (int)$row['height_in'], $row['weight'] ?? 0)) ?></td>
-                    <td><?= htmlspecialchars($row['salary']) ?>L</td>
+                    <td><?= fmtSalaryShort((int)$row['salary']) ?></td>
                     <td><?= htmlspecialchars($row['city']) ?></td>
-                    <td><?= htmlspecialchars(fmtBirthReg($row['birth_year'], $row['registration_no'])) ?></td>
+                    <td><?= htmlspecialchars(fmtNondaniKramank($row['registration_year'] ?? '', $row['registration_no'])) ?></td>
                     <td onclick="event.stopPropagation()">
                         <div class="flex gap-1">
                             <a href="edit-profile.php?id=<?= (int)$row['id'] ?>"

@@ -37,8 +37,6 @@ if (isset($_POST['delete_image_id']) && isset($_POST['ajax'])) {
     $row = $s->get_result()->fetch_assoc();
     if ($row) {
         deleteProfileImage($row['filename']);
-        $conn->prepare("DELETE FROM profile_images WHERE id = ?")->execute() ||
-        $conn->query("DELETE FROM profile_images WHERE id = $imgId");
         $del = $conn->prepare("DELETE FROM profile_images WHERE id = ?");
         $del->bind_param('i', $imgId);
         $del->execute();
@@ -131,6 +129,9 @@ if (isset($_POST['update'])) {
     $mother_name     = trim($_POST['mother_name'] ?? '');
     $family_details  = trim($_POST['family_details'] ?? '');
     $about_me        = trim($_POST['about_me'] ?? '');
+    $varn            = trim($_POST['varn'] ?? '');
+    $chashma         = (int)($_POST['chashma'] ?? 0);
+    $registration_year = trim($_POST['registration_year'] ?? '');
 
     if ($registration_no === '') $errors[] = 'नोंदणी क्रमांक आवश्यक आहे.';
     if (!in_array($gender, [1, 2])) $errors[] = 'लिंग निवडा.';
@@ -143,23 +144,24 @@ if (isset($_POST['update'])) {
         try {
             $stmt = $conn->prepare("
                 UPDATE profiles SET
-                    registration_no=?, gender=?, birth_year=?, name=?, gotra=?,
-                    height_ft=?, height_in=?, salary=?, weight=?,
+                    registration_no=?, registration_year=?, gender=?, birth_year=?, name=?, gotra=?,
+                    height_ft=?, height_in=?, salary=?, weight=?, varn=?, chashma=?,
                     education=?, occupation=?, city=?,
                     mobile_no=?,
                     father_name=?, mother_name=?, family_details=?, about_me=?,
                     updated_at=NOW()
                 WHERE id=?
             ");
-            $stmt->bind_param('ssissiiiissssssssi',
-                $registration_no, $gender, $birth_year, $name, $gotra,
-                $height_ft, $height_in, $salary, $weight, $education, $occupation, $city,
+            $stmt->bind_param('ssisssiiiisissssssssi',
+                $registration_no, $registration_year, $gender, $birth_year, $name, $gotra,
+                $height_ft, $height_in, $salary, $weight, $varn, $chashma,
+                $education, $occupation, $city,
                 $mobile_no, $father_name, $mother_name, $family_details, $about_me, $id
             );
             $stmt->execute();
             $success = 'प्रोफाइल यशस्वीरित्या अपडेट केली! ✅';
-            $profile = array_merge($profile, compact('registration_no','gender','birth_year','name','gotra',
-                'height_ft','height_in','salary','weight','education','occupation','city',
+            $profile = array_merge($profile, compact('registration_no','registration_year','gender','birth_year','name','gotra',
+                'height_ft','height_in','salary','weight','varn','chashma','education','occupation','city',
                 'mobile_no','father_name','mother_name','family_details','about_me'));
         } catch (\mysqli_sql_exception $e) {
             $errors[] = $e->getCode() === 1062
@@ -299,6 +301,10 @@ $existingImages = fetchImages($conn, $id);
                 <label class="field-label">जन्म वर्ष *</label>
                 <input type="text" name="birth_year" class="field" maxlength="4" value="<?= val('birth_year',$profile) ?>" required>
             </div>
+            <div>
+                <label class="field-label">नोंदणी वर्ष</label>
+                <input type="text" name="registration_year" class="field" maxlength="4" placeholder="उदा. 1993" value="<?= val('registration_year',$profile) ?>">
+            </div>
 
             <div class="section-title">वैयक्तिक माहिती</div>
             <div>
@@ -325,6 +331,17 @@ $existingImages = fetchImages($conn, $id);
             <div>
                 <label class="field-label">वजन (kg)</label>
                 <input type="number" name="weight" class="field" min="0" max="200" placeholder="उदा. 70" value="<?= val('weight',$profile) ?>">
+            </div>
+            <div>
+                <label class="field-label">वर्ण</label>
+                <input type="text" name="varn" class="field" placeholder="उदा. गोरा, गहू वर्ण" value="<?= val('varn',$profile) ?>">
+            </div>
+            <div>
+                <label class="field-label">चष्मा</label>
+                <select name="chashma" class="field">
+                    <option value="0" <?= (($_POST['chashma'] ?? $profile['chashma'] ?? 0) != 1) ? 'selected' : '' ?>>नाही</option>
+                    <option value="1" <?= (($_POST['chashma'] ?? $profile['chashma'] ?? 0) == 1) ? 'selected' : '' ?>>हो</option>
+                </select>
             </div>
             <div>
                 <label class="field-label">शिक्षण</label>

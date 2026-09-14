@@ -34,6 +34,9 @@ if (isset($_POST['save'])) {
     $mother_name     = trim($_POST['mother_name'] ?? '');
     $family_details  = trim($_POST['family_details'] ?? '');
     $about_me        = trim($_POST['about_me'] ?? '');
+    $varn            = trim($_POST['varn'] ?? '');
+    $chashma         = (int)($_POST['chashma'] ?? 0);
+    $registration_year = trim($_POST['registration_year'] ?? '');
 
     // Basic validation
     if ($registration_no === '') $errors[] = 'नोंदणी क्रमांक आवश्यक आहे.';
@@ -79,15 +82,17 @@ if (isset($_POST['save'])) {
         try {
             $stmt = $conn->prepare("
                 INSERT INTO profiles
-                    (registration_no, gender, birth_year, name, gotra,
-                     height_ft, height_in, salary, weight, education, occupation, city,
+                    (registration_no, registration_year, gender, birth_year, name, gotra,
+                     height_ft, height_in, salary, weight, varn, chashma,
+                     education, occupation, city,
                      mobile_no, father_name, mother_name, family_details, about_me, profile_image)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             $stmt->bind_param(
-                'ssissiiiisssssssss',
-                $registration_no, $gender, $birth_year, $name, $gotra,
-                $height_ft, $height_in, $salary, $weight, $education, $occupation, $city,
+                'ssisssiiiisisssssssss',
+                $registration_no, $registration_year, $gender, $birth_year, $name, $gotra,
+                $height_ft, $height_in, $salary, $weight, $varn, $chashma,
+                $education, $occupation, $city,
                 $mobile_no, $father_name, $mother_name, $family_details, $about_me, $primaryImg
             );
             $stmt->execute();
@@ -267,6 +272,15 @@ if (isset($_POST['save'])) {
                        value="<?= htmlspecialchars($_POST['birth_year'] ?? '') ?>" required>
             </div>
 
+            <!-- Registration Year -->
+            <div>
+                <label class="field-label" for="registration_year">नोंदणी वर्ष</label>
+                <input type="text" id="registration_year" name="registration_year" class="field"
+                       placeholder="उदा. 1993"
+                       maxlength="4"
+                       value="<?= htmlspecialchars($_POST['registration_year'] ?? '') ?>">
+            </div>
+
             <div class="section-title">वैयक्तिक माहिती</div>
 
             <!-- ── Multi-Photo Upload ── -->
@@ -331,6 +345,23 @@ if (isset($_POST['save'])) {
                 <input type="number" id="weight" name="weight" class="field"
                        placeholder="उदा. 70"
                        min="0" max="200" value="<?= htmlspecialchars($_POST['weight'] ?? '') ?>">
+            </div>
+
+            <!-- Varn -->
+            <div>
+                <label class="field-label" for="varn">वर्ण</label>
+                <input type="text" id="varn" name="varn" class="field"
+                       placeholder="उदा. गोरा, गहू वर्ण"
+                       value="<?= htmlspecialchars($_POST['varn'] ?? '') ?>">
+            </div>
+
+            <!-- Chashma -->
+            <div>
+                <label class="field-label" for="chashma">चष्मा</label>
+                <select id="chashma" name="chashma" class="field">
+                    <option value="0" <?= (($_POST['chashma'] ?? '') != '1') ? 'selected' : '' ?>>नाही</option>
+                    <option value="1" <?= (($_POST['chashma'] ?? '') == '1') ? 'selected' : '' ?>>हो</option>
+                </select>
             </div>
 
             <!-- Education -->

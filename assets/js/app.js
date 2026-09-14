@@ -176,7 +176,84 @@ document.addEventListener('DOMContentLoaded', function () {
     // State
     let activeGender = '';
     let sortBy       = sortByEl ? sortByEl.value : 'id';
-    let sortDir      = 'DESC';
+    let sortDir      = sortDirBtn?.dataset.dir || 'DESC';
+
+    // Default sort direction when a column is first selected
+    const defaultSortDirs = {
+        id:              'DESC',
+        salary:          'DESC',
+        birth_year:      'DESC',
+        height:          'DESC',
+        weight:          'DESC',
+        shortlisted:     'DESC',
+        name:            'ASC',
+        city:            'ASC',
+        education:       'ASC',
+        registration_no: 'ASC',
+        gender:          'ASC',
+        jaat:            'ASC',
+    };
+
+    // Keep all sort controls across the page perfectly synchronized
+    function updateSortUI() {
+        // 1. Sync dropdown
+        if (sortByEl && sortByEl.value !== sortBy) {
+            sortByEl.value = sortBy;
+        }
+
+        // 2. Sync sort direction button
+        if (sortDirBtn) {
+            sortDirBtn.dataset.dir = sortDir;
+            if (sortIcon) sortIcon.textContent = (sortDir === 'ASC') ? '↑' : '↓';
+            sortDirBtn.title = (sortDir === 'ASC')
+                ? 'चढता क्रम (A→Z / कमी ते जास्त)'
+                : 'उतरता क्रम (Z→A / जास्त ते कमी)';
+        }
+
+        // 3. Sync table headers
+        const sortableHeaders = document.querySelectorAll('th.sortable-th');
+        sortableHeaders.forEach(th => {
+            const col = th.dataset.sort;
+            const icon = th.querySelector('.th-sort-icon');
+            if (col === sortBy) {
+                th.classList.add('th-sorted');
+                th.setAttribute('aria-sort', sortDir === 'ASC' ? 'ascending' : 'descending');
+                if (icon) icon.textContent = (sortDir === 'ASC') ? '▲' : '▼';
+            } else {
+                th.classList.remove('th-sorted');
+                th.removeAttribute('aria-sort');
+                if (icon) icon.textContent = '↕';
+            }
+        });
+
+        // 4. Sync quick sort action buttons
+        const quickBtns = document.querySelectorAll('.quick-sort-btn');
+        quickBtns.forEach(btn => {
+            const col = btn.dataset.sort;
+            if (col === sortBy) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+
+    // Apply sort change
+    function applySort(newSortBy, forceDir = null) {
+        if (forceDir !== null) {
+            sortBy = newSortBy;
+            sortDir = forceDir;
+        } else if (sortBy === newSortBy) {
+            // Toggle direction when re-clicking current sort column
+            sortDir = (sortDir === 'DESC') ? 'ASC' : 'DESC';
+        } else {
+            // New column: pick natural default
+            sortBy = newSortBy;
+            sortDir = defaultSortDirs[newSortBy] || 'ASC';
+        }
+        updateSortUI();
+        runSearch(currentQuery());
+    }
 
     // Build the search URL from all current filter state
     function buildUrl(query) {
@@ -255,7 +332,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // ── Gender chip filter ──────────────────────────────────
     genderChips.forEach(chip => {
         chip.addEventListener('click', function () {
-            activeGender = this.dataset.gender;          // '' | '0' | '1'
+            activeGender = this.dataset.gender;          // '' | '1' | '2'
             genderChips.forEach(c => {
                 const active = (c === this);
                 c.classList.toggle('active', active);
@@ -268,8 +345,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // ── Sort column selector ────────────────────────────────
     if (sortByEl) {
         sortByEl.addEventListener('change', function () {
-            sortBy = this.value;
-            runSearch(currentQuery());
+            applySort(this.value, defaultSortDirs[this.value] || 'DESC');
         });
     }
 
@@ -277,11 +353,38 @@ document.addEventListener('DOMContentLoaded', function () {
     if (sortDirBtn) {
         sortDirBtn.addEventListener('click', function () {
             sortDir = (sortDir === 'DESC') ? 'ASC' : 'DESC';
-            this.dataset.dir = sortDir;
-            if (sortIcon) sortIcon.textContent = (sortDir === 'ASC') ? '↑' : '↓';
-            this.title = (sortDir === 'ASC') ? 'Ascending (A→Z)' : 'Descending (Z→A)';
+            updateSortUI();
             runSearch(currentQuery());
         });
     }
+
+    // ── Interactive Table Header Sorting ────────────────────
+    const sortableHeaders = document.querySelectorAll('th.sortable-th');
+    sortableHeaders.forEach(th => {
+        const col = th.dataset.sort;
+        if (!col) return;
+        th.addEventListener('click', function () {
+            applySort(col);
+        });
+        th.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                applySort(col);
+            }
+        });
+    });
+
+    // ── Quick Sort Action Buttons ───────────────────────────
+    const quickBtns = document.querySelectorAll('.quick-sort-btn');
+    quickBtns.forEach(btn => {
+        const col = btn.dataset.sort;
+        if (!col) return;
+        btn.addEventListener('click', function () {
+            applySort(col);
+        });
+    });
+
+    // Initial sync of all sort UI elements
+    updateSortUI();
 
 });

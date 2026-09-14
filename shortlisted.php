@@ -6,7 +6,7 @@ $conn = getDB();
 
 $result = $conn->query("
     SELECT id, gender, birth_year, name, gotra, height_ft, height_in,
-           salary, weight, education, city, registration_no, shortlisted,
+           salary, weight, education, city, registration_no, registration_year, shortlisted,
            jaat, COALESCE(profile_image, profile_photo) AS img_file
     FROM   profiles
     WHERE  shortlisted = 1
@@ -82,14 +82,30 @@ $totalCount = count($profiles);
         <table class="compact-table" aria-label="Shortlisted profiles">
             <thead>
                 <tr>
-                    <th>M/F</th>
-                    <th>नाव. जात</th>
-                    <th>उंची / वजन</th>
-                    <th>पगार</th>
-                    <th>शिक्षण</th>
-                    <th>शहर</th>
-                    <th>जन्म / रजिस्टर no</th>
-                    <th>❤</th>
+                    <th class="sortable-th" data-sort="gender" role="button" tabindex="0" title="लिंगानुसार क्रमवारी लावा">
+                        <div class="th-content"><span>M/F</span><span class="th-sort-icon">↕</span></div>
+                    </th>
+                    <th class="sortable-th" data-sort="name" role="button" tabindex="0" title="नावानुसार क्रमवारी लावा">
+                        <div class="th-content"><span>नाव. जात</span><span class="th-sort-icon">↕</span></div>
+                    </th>
+                    <th class="sortable-th" data-sort="height" role="button" tabindex="0" title="उंचीनुसार क्रमवारी लावा">
+                        <div class="th-content"><span>उंची / वजन</span><span class="th-sort-icon">↕</span></div>
+                    </th>
+                    <th class="sortable-th" data-sort="salary" role="button" tabindex="0" title="पगारानुसार क्रमवारी लावा">
+                        <div class="th-content"><span>पगार</span><span class="th-sort-icon">↕</span></div>
+                    </th>
+                    <th class="sortable-th" data-sort="education" role="button" tabindex="0" title="शिक्षणानुसार क्रमवारी लावा">
+                        <div class="th-content"><span>शिक्षण</span><span class="th-sort-icon">↕</span></div>
+                    </th>
+                    <th class="sortable-th" data-sort="city" role="button" tabindex="0" title="शहरानुसार क्रमवारी लावा">
+                        <div class="th-content"><span>शहर</span><span class="th-sort-icon">↕</span></div>
+                    </th>
+                    <th class="sortable-th" data-sort="birth_year" role="button" tabindex="0" title="जन्म वर्षानुसार क्रमवारी लावा">
+                        <div class="th-content"><span>नोंदणी क्र.</span><span class="th-sort-icon">↕</span></div>
+                    </th>
+                    <th class="sortable-th" data-sort="shortlisted" role="button" tabindex="0" title="शॉर्टलिस्टनुसार क्रमवारी लावा">
+                        <div class="th-content"><span>❤</span><span class="th-sort-icon">↕</span></div>
+                    </th>
                 </tr>
             </thead>
             <tbody id="results">
@@ -122,10 +138,10 @@ $totalCount = count($profiles);
                     </td>
                     <td><?= htmlspecialchars(fmtNameJaat($row['name'], $row['jaat'] ?? '')) ?></td>
                     <td><?= htmlspecialchars(fmtHeightWeight((int)$row['height_ft'], (int)$row['height_in'], $row['weight'] ?? 0)) ?></td>
-                    <td><?= htmlspecialchars($row['salary']) ?>L</td>
+                    <td><?= fmtSalaryShort((int)$row['salary']) ?></td>
                     <td><?= htmlspecialchars($row['education']) ?></td>
                     <td><?= htmlspecialchars($row['city']) ?></td>
-                    <td><?= htmlspecialchars(fmtBirthReg($row['birth_year'], $row['registration_no'])) ?></td>
+                    <td><?= htmlspecialchars(fmtNondaniKramank($row['registration_year'] ?? '', $row['registration_no'])) ?></td>
                     <td class="col-heart" onclick="event.stopPropagation()">
                         <button class="shortlist-btn"
                                 data-id="<?= (int)$row['id'] ?>"

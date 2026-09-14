@@ -11,13 +11,75 @@ $offset  = ($page - 1) * $perPage;
 
 $totalCount = (int)$conn->query("SELECT COUNT(*) AS c FROM profiles WHERE status != 'Inactive'")->fetch_assoc()['c'];
 
+// Sort params for initial load
+$allowedSortCols = [
+    'id', 'name', 'birth_year', 'city', 'registration_no',
+    'salary', 'height', 'weight', 'education', 'gender', 'shortlisted', 'jaat'
+];
+$sortBy  = in_array($_GET['sort_by'] ?? '', $allowedSortCols, true)
+           ? $_GET['sort_by']
+           : 'id';
+$sortDir = strtoupper($_GET['sort_dir'] ?? 'DESC') === 'ASC' ? 'ASC' : 'DESC';
+
+switch ($sortBy) {
+    case 'height':
+        $orderSQL = "ORDER BY (height_ft = 0), (height_ft * 12 + height_in) {$sortDir}, id DESC";
+        break;
+    case 'salary':
+        if ($sortDir === 'ASC') {
+            $orderSQL = "ORDER BY (salary = 0 OR salary IS NULL), salary ASC, id DESC";
+        } else {
+            $orderSQL = "ORDER BY salary DESC, id DESC";
+        }
+        break;
+    case 'birth_year':
+        if ($sortDir === 'ASC') {
+            $orderSQL = "ORDER BY (birth_year = '' OR birth_year IS NULL OR birth_year = '0'), CAST(birth_year AS UNSIGNED) ASC, id DESC";
+        } else {
+            $orderSQL = "ORDER BY CAST(birth_year AS UNSIGNED) DESC, id DESC";
+        }
+        break;
+    case 'weight':
+        if ($sortDir === 'ASC') {
+            $orderSQL = "ORDER BY (weight = 0 OR weight IS NULL), weight ASC, id DESC";
+        } else {
+            $orderSQL = "ORDER BY weight DESC, id DESC";
+        }
+        break;
+    case 'name':
+        $orderSQL = "ORDER BY (name = '' OR name IS NULL), name {$sortDir}, id DESC";
+        break;
+    case 'city':
+        $orderSQL = "ORDER BY (city = '' OR city IS NULL), city {$sortDir}, id DESC";
+        break;
+    case 'education':
+        $orderSQL = "ORDER BY (education = '' OR education IS NULL), education {$sortDir}, id DESC";
+        break;
+    case 'registration_no':
+        $orderSQL = "ORDER BY (registration_no = '' OR registration_no IS NULL), LENGTH(registration_no) {$sortDir}, registration_no {$sortDir}, id {$sortDir}";
+        break;
+    case 'gender':
+        $orderSQL = "ORDER BY gender {$sortDir}, id DESC";
+        break;
+    case 'shortlisted':
+        $orderSQL = "ORDER BY shortlisted {$sortDir}, id DESC";
+        break;
+    case 'jaat':
+        $orderSQL = "ORDER BY (jaat = '' OR jaat IS NULL), jaat {$sortDir}, id DESC";
+        break;
+    case 'id':
+    default:
+        $orderSQL = "ORDER BY id {$sortDir}";
+        break;
+}
+
 $result = $conn->prepare("
     SELECT id, gender, birth_year, name, gotra, height_ft, height_in,
-           salary, weight, education, city, registration_no, shortlisted,
+           salary, weight, education, city, registration_no, registration_year, shortlisted,
            jaat, COALESCE(profile_image, profile_photo) AS img_file
     FROM   profiles
     WHERE  status != 'Inactive'
-    ORDER  BY id DESC
+    {$orderSQL}
     LIMIT  ? OFFSET ?
 ");
 $result->bind_param('ii', $perPage, $offset);
@@ -106,18 +168,39 @@ while ($row = $res->fetch_assoc()) $profiles[] = $row;
             <!-- Right: sort controls -->
             <div class="filter-sort-group">
                 <select id="sortBy" class="sort-select" aria-label="Sort by column">
-                    <option value="id"         selected>नोंद क्र.</option>
-                    <option value="name">नाव</option>
-                    <option value="birth_year">वर्ष</option>
-                    <option value="city">शहर</option>
+                    <option value="id" <?= $sortBy === 'id' ? 'selected' : '' ?>>नोंद क्र. (Newest)</option>
+                    <option value="name" <?= $sortBy === 'name' ? 'selected' : '' ?>>नाव (A→Z)</option>
+                    <option value="birth_year" <?= $sortBy === 'birth_year' ? 'selected' : '' ?>>जन्म वर्ष (Age)</option>
+                    <option value="salary" <?= $sortBy === 'salary' ? 'selected' : '' ?>>पगार (Salary)</option>
+                    <option value="height" <?= $sortBy === 'height' ? 'selected' : '' ?>>उंची (Height)</option>
+                    <option value="weight" <?= $sortBy === 'weight' ? 'selected' : '' ?>>वजन (Weight)</option>
+                    <option value="education" <?= $sortBy === 'education' ? 'selected' : '' ?>>शिक्षण (Education)</option>
+                    <option value="city" <?= $sortBy === 'city' ? 'selected' : '' ?>>शहर (City)</option>
+                    <option value="registration_no" <?= $sortBy === 'registration_no' ? 'selected' : '' ?>>रजिस्टर क्र. (Reg No)</option>
+                    <option value="gender" <?= $sortBy === 'gender' ? 'selected' : '' ?>>लिंग (Gender)</option>
+                    <option value="shortlisted" <?= $sortBy === 'shortlisted' ? 'selected' : '' ?>>शॉर्टलिस्ट (❤)</option>
                 </select>
-                <button class="sort-dir-btn" id="sortDirBtn" data-dir="DESC" title="Descending order" aria-label="Toggle sort direction">
-                    <span class="sort-icon">↓</span>
+                <button class="sort-dir-btn" id="sortDirBtn" data-dir="<?= $sortDir ?>" title="<?= $sortDir === 'ASC' ? 'चढता क्रम (A→Z / कमी ते जास्त)' : 'उतरता क्रम (Z→A / जास्त ते कमी)' ?>" aria-label="Toggle sort direction">
+                    <span class="sort-icon"><?= $sortDir === 'ASC' ? '↑' : '↓' ?></span>
                 </button>
             </div>
 
         </div>
 
+        <!-- QUICK SORT ACTIONS STRIP -->
+        <div class="quick-sort-bar" id="quickSortBar" role="group" aria-label="Quick Sort Actions">
+            <span class="quick-sort-label">क्रमवारी:</span>
+            <div class="quick-sort-scroll">
+                <button type="button" class="quick-sort-btn <?= $sortBy === 'id' ? 'active' : '' ?>" data-sort="id" title="नोंद क्र. नुसार">⚡ नवीन</button>
+                <button type="button" class="quick-sort-btn <?= $sortBy === 'name' ? 'active' : '' ?>" data-sort="name" title="नावानुसार (A-Z)">🔤 नाव</button>
+                <button type="button" class="quick-sort-btn <?= $sortBy === 'birth_year' ? 'active' : '' ?>" data-sort="birth_year" title="जन्म वर्ष / वयानुसार">🎂 वय</button>
+                <button type="button" class="quick-sort-btn <?= $sortBy === 'salary' ? 'active' : '' ?>" data-sort="salary" title="पगारानुसार">💰 पगार</button>
+                <button type="button" class="quick-sort-btn <?= $sortBy === 'height' ? 'active' : '' ?>" data-sort="height" title="उंचीनुसार">📏 उंची</button>
+                <button type="button" class="quick-sort-btn <?= $sortBy === 'city' ? 'active' : '' ?>" data-sort="city" title="शहरानुसार">🏙️ शहर</button>
+                <button type="button" class="quick-sort-btn <?= $sortBy === 'education' ? 'active' : '' ?>" data-sort="education" title="शिक्षणानुसार">🎓 शिक्षण</button>
+                <button type="button" class="quick-sort-btn <?= $sortBy === 'shortlisted' ? 'active' : '' ?>" data-sort="shortlisted" title="शॉर्टलिस्टनुसार">❤️ शॉर्टलिस्ट</button>
+            </div>
+        </div>
 
     </div>
     <!-- /SEARCH BOX -->
@@ -136,14 +219,30 @@ while ($row = $res->fetch_assoc()) $profiles[] = $row;
         <table class="compact-table" aria-label="Profiles list">
             <thead>
                 <tr>
-                    <th>M/F</th>
-                    <th>नाव. जात</th>
-                    <th>उंची / वजन</th>
-                    <th>पगार</th>
-                    <th>शिक्षण</th>
-                    <th>शहर</th>
-                    <th>जन्म / रजिस्टर no</th>
-                    <th>❤</th>
+                    <th class="sortable-th <?= $sortBy === 'gender' ? 'th-sorted' : '' ?>" data-sort="gender" role="button" tabindex="0" title="लिंगानुसार क्रमवारी लावा">
+                        <div class="th-content"><span>M/F</span><span class="th-sort-icon"><?= $sortBy === 'gender' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
+                    </th>
+                    <th class="sortable-th <?= $sortBy === 'name' ? 'th-sorted' : '' ?>" data-sort="name" role="button" tabindex="0" title="नावानुसार क्रमवारी लावा">
+                        <div class="th-content"><span>नाव. जात</span><span class="th-sort-icon"><?= $sortBy === 'name' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
+                    </th>
+                    <th class="sortable-th <?= $sortBy === 'height' ? 'th-sorted' : '' ?>" data-sort="height" role="button" tabindex="0" title="उंचीनुसार क्रमवारी लावा">
+                        <div class="th-content"><span>उंची / वजन</span><span class="th-sort-icon"><?= $sortBy === 'height' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
+                    </th>
+                    <th class="sortable-th <?= $sortBy === 'salary' ? 'th-sorted' : '' ?>" data-sort="salary" role="button" tabindex="0" title="पगारानुसार क्रमवारी लावा">
+                        <div class="th-content"><span>पगार</span><span class="th-sort-icon"><?= $sortBy === 'salary' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
+                    </th>
+                    <th class="sortable-th <?= $sortBy === 'education' ? 'th-sorted' : '' ?>" data-sort="education" role="button" tabindex="0" title="शिक्षणानुसार क्रमवारी लावा">
+                        <div class="th-content"><span>शिक्षण</span><span class="th-sort-icon"><?= $sortBy === 'education' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
+                    </th>
+                    <th class="sortable-th <?= $sortBy === 'city' ? 'th-sorted' : '' ?>" data-sort="city" role="button" tabindex="0" title="शहरानुसार क्रमवारी लावा">
+                        <div class="th-content"><span>शहर</span><span class="th-sort-icon"><?= $sortBy === 'city' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
+                    </th>
+                    <th class="sortable-th <?= $sortBy === 'birth_year' ? 'th-sorted' : '' ?>" data-sort="birth_year" role="button" tabindex="0" title="जन्म वर्षानुसार क्रमवारी लावा">
+                        <div class="th-content"><span>नोंदणी क्र.</span><span class="th-sort-icon"><?= $sortBy === 'birth_year' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
+                    </th>
+                    <th class="sortable-th <?= $sortBy === 'shortlisted' ? 'th-sorted' : '' ?>" data-sort="shortlisted" role="button" tabindex="0" title="शॉर्टलिस्टनुसार क्रमवारी लावा">
+                        <div class="th-content"><span>❤</span><span class="th-sort-icon"><?= $sortBy === 'shortlisted' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
+                    </th>
                 </tr>
             </thead>
             <tbody id="results">
@@ -173,10 +272,10 @@ while ($row = $res->fetch_assoc()) $profiles[] = $row;
                     </td>
                     <td><?= htmlspecialchars(fmtNameJaat($row['name'], $row['jaat'] ?? '')) ?></td>
                     <td><?= htmlspecialchars(fmtHeightWeight((int)$row['height_ft'], (int)$row['height_in'], $row['weight'] ?? 0)) ?></td>
-                    <td><?= htmlspecialchars($row['salary']) ?>L</td>
+                    <td><?= fmtSalaryShort((int)$row['salary']) ?></td>
                     <td><?= htmlspecialchars($row['education']) ?></td>
                     <td><?= htmlspecialchars($row['city']) ?></td>
-                    <td><?= htmlspecialchars(fmtBirthReg($row['birth_year'], $row['registration_no'])) ?></td>
+                    <td><?= htmlspecialchars(fmtNondaniKramank($row['registration_year'] ?? '', $row['registration_no'])) ?></td>
                     <td class="col-heart" onclick="event.stopPropagation()">
                         <button class="shortlist-btn"
                                 data-id="<?= (int)$row['id'] ?>"

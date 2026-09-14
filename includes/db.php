@@ -32,6 +32,25 @@ function getDB(): mysqli {
         if ($chk && $chk->num_rows === 0) {
             $conn->query("ALTER TABLE `profiles` ADD COLUMN `weight` SMALLINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Weight in kg' AFTER `salary`");
         }
+
+        // Auto-migration: ensure 'varn' column exists
+        $chk = $conn->query("SHOW COLUMNS FROM `profiles` LIKE 'varn'");
+        if ($chk && $chk->num_rows === 0) {
+            $conn->query("ALTER TABLE `profiles` ADD COLUMN `varn` VARCHAR(50) DEFAULT NULL COMMENT 'Skin color / वर्ण' AFTER `weight`");
+        }
+
+        // Auto-migration: ensure 'chashma' column exists
+        $chk = $conn->query("SHOW COLUMNS FROM `profiles` LIKE 'chashma'");
+        if ($chk && $chk->num_rows === 0) {
+            $conn->query("ALTER TABLE `profiles` ADD COLUMN `chashma` TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Glasses yes/no' AFTER `varn`");
+        }
+
+        // Auto-migration: ensure 'registration_year' column exists
+        $chk = $conn->query("SHOW COLUMNS FROM `profiles` LIKE 'registration_year'");
+        if ($chk && $chk->num_rows === 0) {
+            $conn->query("ALTER TABLE `profiles` ADD COLUMN `registration_year` VARCHAR(4) DEFAULT NULL COMMENT 'Registration year for nondani kramank' AFTER `registration_no`");
+        }
+
     }
     return $conn;
 }
