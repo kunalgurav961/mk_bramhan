@@ -14,7 +14,8 @@ $totalCount = (int)$conn->query("SELECT COUNT(*) AS c FROM profiles WHERE status
 // Sort params for initial load
 $allowedSortCols = [
     'id', 'name', 'birth_year', 'city', 'registration_no',
-    'salary', 'height', 'weight', 'education', 'gender', 'shortlisted', 'jaat'
+    'salary', 'height', 'weight', 'education', 'gender', 'shortlisted', 'jaat',
+    'varn', 'chashma', 'rashi'
 ];
 $sortBy  = in_array($_GET['sort_by'] ?? '', $allowedSortCols, true)
            ? $_GET['sort_by']
@@ -67,6 +68,15 @@ switch ($sortBy) {
     case 'jaat':
         $orderSQL = "ORDER BY (jaat = '' OR jaat IS NULL), jaat {$sortDir}, id DESC";
         break;
+    case 'varn':
+        $orderSQL = "ORDER BY (varn = '' OR varn IS NULL), varn {$sortDir}, id DESC";
+        break;
+    case 'chashma':
+        $orderSQL = "ORDER BY chashma {$sortDir}, id DESC";
+        break;
+    case 'rashi':
+        $orderSQL = "ORDER BY (rashi = '' OR rashi IS NULL), rashi {$sortDir}, id DESC";
+        break;
     case 'id':
     default:
         $orderSQL = "ORDER BY id {$sortDir}";
@@ -76,7 +86,8 @@ switch ($sortBy) {
 $result = $conn->prepare("
     SELECT id, gender, birth_year, name, gotra, height_ft, height_in,
            salary, weight, education, city, registration_no, registration_year, shortlisted,
-           jaat, COALESCE(profile_image, profile_photo) AS img_file
+           jaat, varn, chashma, rashi, COALESCE(mobile_no, mobile) AS display_mobile,
+           COALESCE(profile_image, profile_photo) AS img_file
     FROM   profiles
     WHERE  status != 'Inactive'
     {$orderSQL}
@@ -179,6 +190,8 @@ while ($row = $res->fetch_assoc()) $profiles[] = $row;
                     <option value="registration_no" <?= $sortBy === 'registration_no' ? 'selected' : '' ?>>रजिस्टर क्र. (Reg No)</option>
                     <option value="gender" <?= $sortBy === 'gender' ? 'selected' : '' ?>>लिंग (Gender)</option>
                     <option value="shortlisted" <?= $sortBy === 'shortlisted' ? 'selected' : '' ?>>शॉर्टलिस्ट (❤)</option>
+                    <option value="varn" <?= $sortBy === 'varn' ? 'selected' : '' ?>>वर्ण (Varn)</option>
+                    <option value="rashi" <?= $sortBy === 'rashi' ? 'selected' : '' ?>>राशी (Rashi)</option>
                 </select>
                 <button class="sort-dir-btn" id="sortDirBtn" data-dir="<?= $sortDir ?>" title="<?= $sortDir === 'ASC' ? 'चढता क्रम (A→Z / कमी ते जास्त)' : 'उतरता क्रम (Z→A / जास्त ते कमी)' ?>" aria-label="Toggle sort direction">
                     <span class="sort-icon"><?= $sortDir === 'ASC' ? '↑' : '↓' ?></span>
@@ -199,6 +212,8 @@ while ($row = $res->fetch_assoc()) $profiles[] = $row;
                 <button type="button" class="quick-sort-btn <?= $sortBy === 'city' ? 'active' : '' ?>" data-sort="city" title="शहरानुसार">🏙️ शहर</button>
                 <button type="button" class="quick-sort-btn <?= $sortBy === 'education' ? 'active' : '' ?>" data-sort="education" title="शिक्षणानुसार">🎓 शिक्षण</button>
                 <button type="button" class="quick-sort-btn <?= $sortBy === 'shortlisted' ? 'active' : '' ?>" data-sort="shortlisted" title="शॉर्टलिस्टनुसार">❤️ शॉर्टलिस्ट</button>
+                <button type="button" class="quick-sort-btn <?= $sortBy === 'varn' ? 'active' : '' ?>" data-sort="varn" title="वर्णानुसार">🎨 वर्ण</button>
+                <button type="button" class="quick-sort-btn <?= $sortBy === 'rashi' ? 'active' : '' ?>" data-sort="rashi" title="राशीनुसार">♈ राशी</button>
             </div>
         </div>
 
@@ -238,7 +253,19 @@ while ($row = $res->fetch_assoc()) $profiles[] = $row;
                         <div class="th-content"><span>शहर</span><span class="th-sort-icon"><?= $sortBy === 'city' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
                     </th>
                     <th class="sortable-th <?= $sortBy === 'birth_year' ? 'th-sorted' : '' ?>" data-sort="birth_year" role="button" tabindex="0" title="जन्म वर्षानुसार क्रमवारी लावा">
-                        <div class="th-content"><span>नोंदणी क्र.</span><span class="th-sort-icon"><?= $sortBy === 'birth_year' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
+                        <div class="th-content"><span>जन्म वर्ष</span><span class="th-sort-icon"><?= $sortBy === 'birth_year' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
+                    </th>
+                    <th class="sortable-th <?= $sortBy === 'registration_no' ? 'th-sorted' : '' ?>" data-sort="registration_no" role="button" tabindex="0" title="नोंदणी क्रमांकानुसार क्रमवारी लावा">
+                        <div class="th-content"><span>नोंदणी क्र.</span><span class="th-sort-icon"><?= $sortBy === 'registration_no' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
+                    </th>
+                    <th class="sortable-th <?= $sortBy === 'varn' ? 'th-sorted' : '' ?>" data-sort="varn" role="button" tabindex="0" title="वर्ण / चष्मा नुसार क्रमवारी लावा">
+                        <div class="th-content"><span>वर्ण / चष्मा</span><span class="th-sort-icon"><?= $sortBy === 'varn' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
+                    </th>
+                    <th class="sortable-th <?= $sortBy === 'rashi' ? 'th-sorted' : '' ?>" data-sort="rashi" role="button" tabindex="0" title="राशीनुसार क्रमवारी लावा">
+                        <div class="th-content"><span>राशी</span><span class="th-sort-icon"><?= $sortBy === 'rashi' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
+                    </th>
+                    <th title="मोबाईल नंबर">
+                        <div class="th-content"><span>📱 मोबाईल</span></div>
                     </th>
                     <th class="sortable-th <?= $sortBy === 'shortlisted' ? 'th-sorted' : '' ?>" data-sort="shortlisted" role="button" tabindex="0" title="शॉर्टलिस्टनुसार क्रमवारी लावा">
                         <div class="th-content"><span>❤</span><span class="th-sort-icon"><?= $sortBy === 'shortlisted' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
@@ -248,7 +275,7 @@ while ($row = $res->fetch_assoc()) $profiles[] = $row;
             <tbody id="results">
                 <?php if (empty($profiles)): ?>
                 <tr>
-                    <td colspan="8" style="text-align:center;padding:36px;color:#9ca3af;font-size:13px;">
+                    <td colspan="12" style="text-align:center;padding:36px;color:#9ca3af;font-size:13px;">
                         <div style="font-size:36px;margin-bottom:8px;">👤</div>
                         <div>अजून कोणतीही प्रोफाइल नाही</div>
                     </td>
@@ -275,7 +302,11 @@ while ($row = $res->fetch_assoc()) $profiles[] = $row;
                     <td><?= fmtSalaryShort((int)$row['salary']) ?></td>
                     <td><?= htmlspecialchars($row['education']) ?></td>
                     <td><?= htmlspecialchars($row['city']) ?></td>
+                    <td><?= htmlspecialchars(resolveFullYear($row['birth_year'])) ?></td>
                     <td><?= htmlspecialchars(fmtNondaniKramank($row['registration_year'] ?? '', $row['registration_no'])) ?></td>
+                    <td><?= htmlspecialchars(fmtVarnChashma($row['varn'] ?? '', (int)($row['chashma'] ?? 0))) ?></td>
+                    <td><?= htmlspecialchars($row['rashi'] ?? '') ?></td>
+                    <td><?= htmlspecialchars($row['display_mobile'] ?? '') ?></td>
                     <td class="col-heart" onclick="event.stopPropagation()">
                         <button class="shortlist-btn"
                                 data-id="<?= (int)$row['id'] ?>"

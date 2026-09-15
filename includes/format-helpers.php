@@ -67,6 +67,19 @@ function fmtNondaniKramank(string $regYear, string $regNo): string {
 }
 
 /**
+ * Format varn + chashma for combined display: "गोरा / चष्मा"
+ * If varn is empty, shows chashma status if applicable.
+ * If chashma is 0 and varn is empty, returns '—'.
+ */
+function fmtVarnChashma(string $varn, int $chashma): string {
+    $v = trim($varn);
+    $parts = [];
+    if ($v !== '') $parts[] = $v;
+    if ($chashma) $parts[] = 'चष्मा';
+    return !empty($parts) ? implode(' / ', $parts) : '—';
+}
+
+/**
  * @deprecated Use fmtNondaniKramank() instead.
  * Kept for backward compatibility during transition.
  */

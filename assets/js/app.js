@@ -192,6 +192,8 @@ document.addEventListener('DOMContentLoaded', function () {
         registration_no: 'ASC',
         gender:          'ASC',
         jaat:            'ASC',
+        varn:            'ASC',
+        rashi:           'ASC',
     };
 
     // Keep all sort controls across the page perfectly synchronized
