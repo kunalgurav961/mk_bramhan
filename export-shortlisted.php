@@ -16,7 +16,7 @@ $conn = getDB();
 
 $stmt = $conn->prepare("
     SELECT registration_no, registration_year, name, gender, birth_year,
-           gotra, height_ft, height_in, salary, weight, varn, chashma,
+           gotra, height_ft, height_in, salary, weight, varn, chashma, aahar,
            education, occupation, city
     FROM   profiles
     WHERE  shortlisted = 1
@@ -51,6 +51,7 @@ fputcsv($out, [
     'वजन (kg)',
     'वर्ण',
     'चष्मा',
+    'आहार',
     'पगार',
     'शिक्षण',
     'व्यवसाय',
@@ -78,6 +79,7 @@ while ($row = $result->fetch_assoc()) {
         $weight,
         $varn,
         $chashma,
+        $row['aahar'] ?? '—',
         $salary,
         $row['education'] ?: '—',
         $row['occupation'] ?: '—',

@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS `profiles` (
     `weight`          SMALLINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Weight in kg',
     `varn`            VARCHAR(50)       DEFAULT NULL COMMENT 'Skin color / वर्ण',
     `chashma`         TINYINT(1)        NOT NULL DEFAULT 0 COMMENT 'Glasses yes/no',
+    `aahar`           VARCHAR(50)       DEFAULT NULL COMMENT 'Diet / आहार',
     `education`       VARCHAR(100)      DEFAULT NULL,
     `occupation`      VARCHAR(100)      DEFAULT NULL,
     `city`            VARCHAR(80)       NOT NULL,

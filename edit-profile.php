@@ -131,6 +131,7 @@ if (isset($_POST['update'])) {
     $about_me        = trim($_POST['about_me'] ?? '');
     $varn            = trim($_POST['varn'] ?? '');
     $chashma         = (int)($_POST['chashma'] ?? 0);
+    $aahar           = trim($_POST['aahar'] ?? '');
     $registration_year = trim($_POST['registration_year'] ?? '');
 
     if ($registration_no === '') $errors[] = 'नोंदणी क्रमांक आवश्यक आहे.';
@@ -145,23 +146,23 @@ if (isset($_POST['update'])) {
             $stmt = $conn->prepare("
                 UPDATE profiles SET
                     registration_no=?, registration_year=?, gender=?, birth_year=?, name=?, gotra=?,
-                    height_ft=?, height_in=?, salary=?, weight=?, varn=?, chashma=?,
+                    height_ft=?, height_in=?, salary=?, weight=?, varn=?, chashma=?, aahar=?,
                     education=?, occupation=?, city=?,
                     mobile_no=?,
                     father_name=?, mother_name=?, family_details=?, about_me=?,
                     updated_at=NOW()
                 WHERE id=?
             ");
-            $stmt->bind_param('ssisssiiiisissssssssi',
+            $stmt->bind_param('ssisssiiiisississsssssi',
                 $registration_no, $registration_year, $gender, $birth_year, $name, $gotra,
-                $height_ft, $height_in, $salary, $weight, $varn, $chashma,
+                $height_ft, $height_in, $salary, $weight, $varn, $chashma, $aahar,
                 $education, $occupation, $city,
                 $mobile_no, $father_name, $mother_name, $family_details, $about_me, $id
             );
             $stmt->execute();
             $success = 'प्रोफाइल यशस्वीरित्या अपडेट केली! ✅';
             $profile = array_merge($profile, compact('registration_no','registration_year','gender','birth_year','name','gotra',
-                'height_ft','height_in','salary','weight','varn','chashma','education','occupation','city',
+                'height_ft','height_in','salary','weight','varn','chashma','aahar','education','occupation','city',
                 'mobile_no','father_name','mother_name','family_details','about_me'));
         } catch (\mysqli_sql_exception $e) {
             $errors[] = $e->getCode() === 1062
@@ -344,6 +345,16 @@ $existingImages = fetchImages($conn, $id);
                 </select>
             </div>
             <div>
+                <label class="field-label">आहार</label>
+                <select name="aahar" class="field">
+                    <?php $aaharVal = $_POST['aahar'] ?? $profile['aahar'] ?? ''; ?>
+                    <option value="" <?= ($aaharVal === '') ? 'selected' : '' ?>>निवडा</option>
+                    <option value="शाकाहारी" <?= ($aaharVal === 'शाकाहारी') ? 'selected' : '' ?>>शाकाहारी</option>
+                    <option value="मांसाहारी" <?= ($aaharVal === 'मांसाहारी') ? 'selected' : '' ?>>मांसाहारी</option>
+                    <option value="एगीटेरियन" <?= ($aaharVal === 'एगीटेरियन') ? 'selected' : '' ?>>एगीटेरियन</option>
+                </select>
+            </div>
+            <div>
                 <label class="field-label">शिक्षण</label>
                 <input type="text" name="education" class="field" value="<?= val('education',$profile) ?>">
             </div>
@@ -370,7 +381,7 @@ $existingImages = fetchImages($conn, $id);
                 <textarea name="family_details" class="field" rows="3"><?= val('family_details',$profile) ?></textarea>
             </div>
             <div>
-                <label class="field-label">माझ्याबद्दल</label>
+                <label class="field-label">माझ्याबद्दल/माझ्या अपेक्षा</label>
                 <textarea name="about_me" class="field" rows="3"><?= val('about_me',$profile) ?></textarea>
             </div>
 

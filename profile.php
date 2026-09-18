@@ -18,7 +18,7 @@ if ($id <= 0) {
 // Single optimized query
 $stmt = $conn->prepare("
     SELECT id, registration_no, registration_year, gender, birth_year, name, gotra,
-           height_ft, height_in, salary, weight, varn, chashma, education, occupation, city,
+           height_ft, height_in, salary, weight, varn, chashma, aahar, education, occupation, city,
            father_name, mother_name, family_details, about_me,
            shortlisted, created_at, status,
            mobile_no, mobile, mobile_2, mobile_3, mobile_4,
@@ -613,6 +613,12 @@ if (str_contains($backUrl, 'admin-dashboard')) $backLabel = 'Admin Dashboard';
                 <span class="info-label">चष्मा</span>
                 <span class="info-value"><?= ((int)($p['chashma'] ?? 0) === 1) ? 'हो' : 'नाही' ?></span>
             </div>
+            <?php if (!empty($p['aahar'])): ?>
+            <div class="info-row">
+                <span class="info-label">आहार</span>
+                <span class="info-value"><?= htmlspecialchars($p['aahar']) ?></span>
+            </div>
+            <?php endif; ?>
             <div class="info-row">
                 <span class="info-label">शहर</span>
                 <span class="info-value"><?= htmlspecialchars($p['city'] ?: '—') ?></span>
@@ -703,7 +709,7 @@ if (str_contains($backUrl, 'admin-dashboard')) $backLabel = 'Admin Dashboard';
         <!-- About Me -->
         <?php if ($p['about_me']): ?>
         <div class="info-section">
-            <div class="info-section-title">💬 माझ्याबद्दल</div>
+            <div class="info-section-title">💬 माझ्याबद्दल/माझ्या अपेक्षा</div>
             <p style="font-size:13px;line-height:1.7;color:var(--text);white-space:pre-wrap;"><?= htmlspecialchars($p['about_me']) ?></p>
         </div>
         <?php endif; ?>

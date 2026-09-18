@@ -51,6 +51,12 @@ function getDB(): mysqli {
             $conn->query("ALTER TABLE `profiles` ADD COLUMN `registration_year` VARCHAR(4) DEFAULT NULL COMMENT 'Registration year for nondani kramank' AFTER `registration_no`");
         }
 
+        // Auto-migration: ensure 'aahar' column exists
+        $chk = $conn->query("SHOW COLUMNS FROM `profiles` LIKE 'aahar'");
+        if ($chk && $chk->num_rows === 0) {
+            $conn->query("ALTER TABLE `profiles` ADD COLUMN `aahar` VARCHAR(50) DEFAULT NULL COMMENT 'Diet / आहार' AFTER `chashma`");
+        }
+
     }
     return $conn;
 }

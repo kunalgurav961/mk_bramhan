@@ -15,7 +15,7 @@ $totalCount = (int)$conn->query("SELECT COUNT(*) AS c FROM profiles WHERE status
 $allowedSortCols = [
     'id', 'name', 'birth_year', 'city', 'registration_no',
     'salary', 'height', 'weight', 'education', 'gender', 'shortlisted', 'jaat',
-    'varn', 'chashma', 'rashi'
+    'varn', 'chashma', 'aahar', 'rashi'
 ];
 $sortBy  = in_array($_GET['sort_by'] ?? '', $allowedSortCols, true)
            ? $_GET['sort_by']
@@ -74,6 +74,9 @@ switch ($sortBy) {
     case 'chashma':
         $orderSQL = "ORDER BY chashma {$sortDir}, id DESC";
         break;
+    case 'aahar':
+        $orderSQL = "ORDER BY (aahar = '' OR aahar IS NULL), aahar {$sortDir}, id DESC";
+        break;
     case 'rashi':
         $orderSQL = "ORDER BY (rashi = '' OR rashi IS NULL), rashi {$sortDir}, id DESC";
         break;
@@ -86,7 +89,7 @@ switch ($sortBy) {
 $result = $conn->prepare("
     SELECT id, gender, birth_year, name, gotra, height_ft, height_in,
            salary, weight, education, city, registration_no, registration_year, shortlisted,
-           jaat, varn, chashma, rashi, COALESCE(mobile_no, mobile) AS display_mobile,
+           jaat, varn, chashma, aahar, rashi, COALESCE(mobile_no, mobile) AS display_mobile,
            COALESCE(profile_image, profile_photo) AS img_file
     FROM   profiles
     WHERE  status != 'Inactive'
@@ -261,6 +264,9 @@ while ($row = $res->fetch_assoc()) $profiles[] = $row;
                     <th class="sortable-th <?= $sortBy === 'varn' ? 'th-sorted' : '' ?>" data-sort="varn" role="button" tabindex="0" title="वर्ण / चष्मा नुसार क्रमवारी लावा">
                         <div class="th-content"><span>वर्ण / चष्मा</span><span class="th-sort-icon"><?= $sortBy === 'varn' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
                     </th>
+                    <th class="sortable-th <?= $sortBy === 'aahar' ? 'th-sorted' : '' ?>" data-sort="aahar" role="button" tabindex="0" title="आहारानुसार क्रमवारी लावा">
+                        <div class="th-content"><span>आहार</span><span class="th-sort-icon"><?= $sortBy === 'aahar' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
+                    </th>
                     <th class="sortable-th <?= $sortBy === 'rashi' ? 'th-sorted' : '' ?>" data-sort="rashi" role="button" tabindex="0" title="राशीनुसार क्रमवारी लावा">
                         <div class="th-content"><span>राशी</span><span class="th-sort-icon"><?= $sortBy === 'rashi' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
                     </th>
@@ -275,7 +281,7 @@ while ($row = $res->fetch_assoc()) $profiles[] = $row;
             <tbody id="results">
                 <?php if (empty($profiles)): ?>
                 <tr>
-                    <td colspan="12" style="text-align:center;padding:36px;color:#9ca3af;font-size:13px;">
+                    <td colspan="13" style="text-align:center;padding:36px;color:#9ca3af;font-size:13px;">
                         <div style="font-size:36px;margin-bottom:8px;">👤</div>
                         <div>अजून कोणतीही प्रोफाइल नाही</div>
                     </td>
@@ -305,6 +311,7 @@ while ($row = $res->fetch_assoc()) $profiles[] = $row;
                     <td><?= htmlspecialchars(resolveFullYear($row['birth_year'])) ?></td>
                     <td><?= htmlspecialchars(fmtNondaniKramank($row['registration_year'] ?? '', $row['registration_no'])) ?></td>
                     <td><?= htmlspecialchars(fmtVarnChashma($row['varn'] ?? '', (int)($row['chashma'] ?? 0))) ?></td>
+                    <td><?= htmlspecialchars($row['aahar'] ?? '—') ?></td>
                     <td><?= htmlspecialchars($row['rashi'] ?? '') ?></td>
                     <td><?= htmlspecialchars($row['display_mobile'] ?? '') ?></td>
                     <td class="col-heart" onclick="event.stopPropagation()">

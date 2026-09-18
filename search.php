@@ -37,7 +37,7 @@ $genderFilter = in_array($genderParam, ['1', '2'], true) ? (int)$genderParam : n
 $allowedSortCols = [
     'id', 'name', 'birth_year', 'city', 'registration_no',
     'salary', 'height', 'weight', 'education', 'gender', 'shortlisted', 'jaat',
-    'varn', 'chashma', 'rashi'
+    'varn', 'chashma', 'aahar', 'rashi'
 ];
 $sortBy  = in_array($_GET['sort_by'] ?? '', $allowedSortCols, true)
            ? $_GET['sort_by']
@@ -175,6 +175,9 @@ switch ($sortBy) {
     case 'chashma':
         $orderSQL = "ORDER BY chashma {$sortDir}, id DESC";
         break;
+    case 'aahar':
+        $orderSQL = "ORDER BY (aahar = '' OR aahar IS NULL), aahar {$sortDir}, id DESC";
+        break;
     case 'rashi':
         $orderSQL = "ORDER BY (rashi = '' OR rashi IS NULL), rashi {$sortDir}, id DESC";
         break;
@@ -187,7 +190,7 @@ switch ($sortBy) {
 $sql = "
     SELECT id, gender, birth_year, name, gotra, height_ft, height_in,
            salary, weight, education, city, registration_no, registration_year, shortlisted,
-           jaat, varn, chashma, rashi, profile_image, profile_photo, mobile_no,
+           jaat, varn, chashma, aahar, rashi, profile_image, profile_photo, mobile_no,
            COALESCE(mobile_no, mobile) AS display_mobile
     FROM   profiles
     {$whereSQL}
@@ -252,6 +255,7 @@ if (empty($rows)): ?>
     <td><?= htmlspecialchars(resolveFullYear($row['birth_year'])) ?></td>
     <td><?= htmlspecialchars(fmtNondaniKramank($row['registration_year'] ?? '', $row['registration_no'])) ?></td>
     <td><?= htmlspecialchars(fmtVarnChashma($row['varn'] ?? '', (int)($row['chashma'] ?? 0))) ?></td>
+    <td><?= htmlspecialchars($row['aahar'] ?? '—') ?></td>
     <td><?= htmlspecialchars($row['rashi'] ?? '') ?></td>
     <td><?= htmlspecialchars($row['display_mobile'] ?? '') ?></td>
     <td class="col-heart" onclick="event.stopPropagation()">

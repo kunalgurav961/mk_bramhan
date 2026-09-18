@@ -24,7 +24,7 @@ $conn = getDB();
 const REQUIRED_COLS = ['registration_no', 'gender', 'birth_year', 'name', 'gotra', 'city'];
 const ALL_COLS      = [
     'registration_no', 'registration_year', 'gender', 'birth_year', 'name', 'gotra',
-    'height_ft', 'height_in', 'salary', 'weight', 'varn', 'chashma',
+    'height_ft', 'height_in', 'salary', 'weight', 'varn', 'chashma', 'aahar',
     'education', 'occupation', 'city',
     'father_name', 'mother_name', 'family_details', 'about_me',
 ];

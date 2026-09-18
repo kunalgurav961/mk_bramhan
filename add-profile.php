@@ -36,6 +36,7 @@ if (isset($_POST['save'])) {
     $about_me        = trim($_POST['about_me'] ?? '');
     $varn            = trim($_POST['varn'] ?? '');
     $chashma         = (int)($_POST['chashma'] ?? 0);
+    $aahar           = trim($_POST['aahar'] ?? '');
     $registration_year = trim($_POST['registration_year'] ?? '');
 
     // Basic validation
@@ -83,15 +84,15 @@ if (isset($_POST['save'])) {
             $stmt = $conn->prepare("
                 INSERT INTO profiles
                     (registration_no, registration_year, gender, birth_year, name, gotra,
-                     height_ft, height_in, salary, weight, varn, chashma,
+                     height_ft, height_in, salary, weight, varn, chashma, aahar,
                      education, occupation, city,
                      mobile_no, father_name, mother_name, family_details, about_me, profile_image)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             $stmt->bind_param(
-                'ssisssiiiisisssssssss',
+                'ssisssiiiisississsssss',
                 $registration_no, $registration_year, $gender, $birth_year, $name, $gotra,
-                $height_ft, $height_in, $salary, $weight, $varn, $chashma,
+                $height_ft, $height_in, $salary, $weight, $varn, $chashma, $aahar,
                 $education, $occupation, $city,
                 $mobile_no, $father_name, $mother_name, $family_details, $about_me, $primaryImg
             );
@@ -364,6 +365,17 @@ if (isset($_POST['save'])) {
                 </select>
             </div>
 
+            <!-- Aahar -->
+            <div>
+                <label class="field-label" for="aahar">आहार</label>
+                <select id="aahar" name="aahar" class="field">
+                    <option value="" <?= (($_POST['aahar'] ?? '') === '') ? 'selected' : '' ?>>निवडा</option>
+                    <option value="शाकाहारी" <?= (($_POST['aahar'] ?? '') === 'शाकाहारी') ? 'selected' : '' ?>>शाकाहारी</option>
+                    <option value="मांसाहारी" <?= (($_POST['aahar'] ?? '') === 'मांसाहारी') ? 'selected' : '' ?>>मांसाहारी</option>
+                    <option value="एगीटेरियन" <?= (($_POST['aahar'] ?? '') === 'एगीटेरियन') ? 'selected' : '' ?>>एगीटेरियन</option>
+                </select>
+            </div>
+
             <!-- Education -->
             <div>
                 <label class="field-label" for="education">शिक्षण</label>
@@ -415,7 +427,7 @@ if (isset($_POST['save'])) {
 
             <!-- About Me -->
             <div>
-                <label class="field-label" for="about_me">माझ्याबद्दल</label>
+                <label class="field-label" for="about_me">माझ्याबद्दल/माझ्या अपेक्षा</label>
                 <textarea id="about_me" name="about_me" class="field" rows="3"
                           placeholder="स्वतःबद्दल थोडक्यात लिहा..."><?= htmlspecialchars($_POST['about_me'] ?? '') ?></textarea>
             </div>
