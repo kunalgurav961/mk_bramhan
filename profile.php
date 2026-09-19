@@ -481,7 +481,7 @@ if (str_contains($backUrl, 'admin-dashboard')) $backLabel = 'Admin Dashboard';
             <a href="<?= $backUrl ?>" class="back-btn" aria-label="<?= $backLabel ?> वर जा">←</a>
             <div>
                 <span class="ph-title">प्रोफाइल</span>
-                <span class="ph-sub"><?= htmlspecialchars($p['registration_no']) ?></span>
+                <span class="ph-sub"><?= htmlspecialchars(fmtBirthRegYear($p['birth_year'], $p['registration_year'] ?? '')) ?></span>
             </div>
         </div>
         <?php if ($isAdmin): ?>
@@ -550,7 +550,7 @@ if (str_contains($backUrl, 'admin-dashboard')) $backLabel = 'Admin Dashboard';
         <!-- Name block below the wide image -->
         <div class="profile-name-block" style="width:100%;background:var(--header);padding:14px 20px 18px;">
             <div class="profile-name"><?= htmlspecialchars($p['name']) ?></div>
-            <div class="profile-regno">नोंदणी क्र. <?= htmlspecialchars($p['registration_no']) ?></div>
+            <div class="profile-regno"><?= htmlspecialchars(fmtBirthRegYear($p['birth_year'], $p['registration_year'] ?? '')) ?></div>
             <span class="gender-badge <?= $genderClass ?>"><?= $genderText ?></span>
 
             <!-- Shortlist toggle on profile page -->
@@ -724,8 +724,8 @@ if (str_contains($backUrl, 'admin-dashboard')) $backLabel = 'Admin Dashboard';
                 </span>
             </div>
             <div class="info-row">
-                <span class="info-label">नोंदणी क्रमांक</span>
-                <span class="info-value"><?= htmlspecialchars($p['registration_no']) ?></span>
+                <span class="info-label">नोंदणी वर्ष</span>
+                <span class="info-value"><?= htmlspecialchars($p['registration_year'] ?: '—') ?></span>
             </div>
         </div>
 

@@ -101,7 +101,7 @@ $totalCount = count($profiles);
                         <div class="th-content"><span>शहर</span><span class="th-sort-icon">↕</span></div>
                     </th>
                     <th class="sortable-th" data-sort="birth_year" role="button" tabindex="0" title="जन्म वर्षानुसार क्रमवारी लावा">
-                        <div class="th-content"><span>नोंदणी क्र.</span><span class="th-sort-icon">↕</span></div>
+                        <div class="th-content"><span>जन्म वर्ष.नोंदणी वर्ष</span><span class="th-sort-icon">↕</span></div>
                     </th>
                     <th class="sortable-th" data-sort="shortlisted" role="button" tabindex="0" title="शॉर्टलिस्टनुसार क्रमवारी लावा">
                         <div class="th-content"><span>❤</span><span class="th-sort-icon">↕</span></div>
@@ -141,7 +141,7 @@ $totalCount = count($profiles);
                     <td><?= fmtSalaryShort((int)$row['salary']) ?></td>
                     <td><?= htmlspecialchars($row['education']) ?></td>
                     <td><?= htmlspecialchars($row['city']) ?></td>
-                    <td><?= htmlspecialchars(fmtNondaniKramank($row['registration_year'] ?? '', $row['registration_no'])) ?></td>
+                    <td><?= htmlspecialchars(fmtBirthRegYear($row['birth_year'], $row['registration_year'] ?? '')) ?></td>
                     <td class="col-heart" onclick="event.stopPropagation()">
                         <button class="shortlist-btn"
                                 data-id="<?= (int)$row['id'] ?>"

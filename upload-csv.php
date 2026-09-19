@@ -21,7 +21,7 @@ require_once 'includes/db.php';
 $conn = getDB();
 
 // ── Expected columns ──────────────────────────────────────────────────────────
-const REQUIRED_COLS = ['registration_no', 'gender', 'birth_year', 'name', 'gotra', 'city'];
+const REQUIRED_COLS = ['gender', 'birth_year', 'name', 'gotra', 'city'];
 const ALL_COLS      = [
     'registration_no', 'registration_year', 'gender', 'birth_year', 'name', 'gotra',
     'height_ft', 'height_in', 'salary', 'weight', 'varn', 'chashma', 'aahar',
@@ -81,7 +81,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
 
                 // Per-row validation
                 $rowErr = [];
-                if (empty($row['registration_no'])) $rowErr[] = 'नोंदणी क्र. आवश्यक';
                 if (!in_array((int)($row['gender'] ?? ''), [1, 2])) $rowErr[] = 'लिंग 1 किंवा 2 असावे';
                 if (empty($row['birth_year'])) $rowErr[] = 'जन्म वर्ष आवश्यक';
                 if (empty($row['name']))  $rowErr[] = 'नाव आवश्यक';
@@ -138,9 +137,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['do_import'])) {
             }
 
             $regNo = trim($row['registration_no'] ?? '');
-
-            // Duplicate check
-            if (isset($existingNos[$regNo])) {
+            if ($regNo === '') {
+                $regNo = 'MKB' . date('YmdHis') . rand(100, 999);
+            } elseif (isset($existingNos[$regNo])) {
                 $skipped++;
                 $rowErrors[] = "Line {$lineNo}: नोंदणी क्र. '{$regNo}' आधीच database मध्ये आहे.";
                 continue;
@@ -293,7 +292,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['do_import'])) {
                 <tr>
                     <th>Line</th>
                     <th>Status</th>
-                    <th>नोंदणी क्र.</th>
+                    <th>जन्म वर्ष.नोंदणी वर्ष</th>
                     <th>लिंग</th>
                     <th>वर्ष</th>
                     <th>नाव</th>
@@ -307,7 +306,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['do_import'])) {
                 <tr class="<?= empty($entry['errors']) ? 'row-ok' : 'row-err' ?>">
                     <td><?= $entry['line'] ?></td>
                     <td><?= empty($entry['errors']) ? '✅' : '❌' ?></td>
-                    <td><?= htmlspecialchars($entry['data']['registration_no'] ?? '') ?></td>
+                    <td><?= htmlspecialchars(fmtBirthRegYear($entry['data']['birth_year'] ?? '', $entry['data']['registration_year'] ?? '')) ?></td>
                     <td><?= ((int)($entry['data']['gender'] ?? 0) === 1) ? 'मुलगा' : 'मुलगी' ?></td>
                     <td><?= htmlspecialchars($entry['data']['birth_year'] ?? '') ?></td>
                     <td><?= htmlspecialchars($entry['data']['name'] ?? '') ?></td>

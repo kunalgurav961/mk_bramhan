@@ -280,7 +280,7 @@ $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin');
                     </th>
                     <th class="cursor-pointer hover:bg-[#252542]">
                         <a href="<?= adminSortUrl('birth_year', $sortBy, $sortDir, $search) ?>" class="flex items-center justify-between gap-1 text-white no-underline">
-                            <span>नोंदणी क्र.</span>
+                            <span>जन्म वर्ष.नोंदणी वर्ष</span>
                             <span class="text-[9px] text-amber-300"><?= $sortBy === 'birth_year' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span>
                         </a>
                     </th>
@@ -314,7 +314,7 @@ $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin');
                     <td><?= htmlspecialchars(fmtHeightWeight((int)$row['height_ft'], (int)$row['height_in'], $row['weight'] ?? 0)) ?></td>
                     <td><?= fmtSalaryShort((int)$row['salary']) ?></td>
                     <td><?= htmlspecialchars($row['city']) ?></td>
-                    <td><?= htmlspecialchars(fmtNondaniKramank($row['registration_year'] ?? '', $row['registration_no'])) ?></td>
+                    <td><?= htmlspecialchars(fmtBirthRegYear($row['birth_year'], $row['registration_year'] ?? '')) ?></td>
                     <td onclick="event.stopPropagation()">
                         <div class="flex gap-1">
                             <a href="edit-profile.php?id=<?= (int)$row['id'] ?>"

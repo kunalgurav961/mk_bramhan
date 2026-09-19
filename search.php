@@ -226,7 +226,7 @@ function getImgSrc(array $row): string {
 
 if (empty($rows)): ?>
 <tr>
-    <td colspan="12" style="text-align:center;padding:36px;color:#9ca3af;font-size:13px;">
+    <td colspan="11" style="text-align:center;padding:36px;color:#9ca3af;font-size:13px;">
         <div style="font-size:36px;margin-bottom:8px;"><?= $shortlisted ? '💔' : '🔍' ?></div>
         <div><?= $shortlisted ? 'शॉर्टलिस्ट रिकामी आहे' : 'कोणतीही प्रोफाइल सापडली नाही' ?></div>
     </td>
@@ -252,8 +252,7 @@ if (empty($rows)): ?>
     <td><?= fmtSalaryShort((int)$row['salary']) ?></td>
     <td style="max-width:70px;overflow:hidden;text-overflow:ellipsis;"><?= htmlspecialchars($row['education']) ?></td>
     <td><?= htmlspecialchars($row['city']) ?></td>
-    <td><?= htmlspecialchars(resolveFullYear($row['birth_year'])) ?></td>
-    <td><?= htmlspecialchars(fmtNondaniKramank($row['registration_year'] ?? '', $row['registration_no'])) ?></td>
+    <td><?= htmlspecialchars(fmtBirthRegYear($row['birth_year'], $row['registration_year'] ?? '')) ?></td>
     <td><?= htmlspecialchars(fmtVarnChashma($row['varn'] ?? '', (int)($row['chashma'] ?? 0))) ?></td>
     <td><?= htmlspecialchars($row['aahar'] ?? '—') ?></td>
     <td><?= htmlspecialchars($row['rashi'] ?? '') ?></td>

@@ -256,10 +256,7 @@ while ($row = $res->fetch_assoc()) $profiles[] = $row;
                         <div class="th-content"><span>शहर</span><span class="th-sort-icon"><?= $sortBy === 'city' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
                     </th>
                     <th class="sortable-th <?= $sortBy === 'birth_year' ? 'th-sorted' : '' ?>" data-sort="birth_year" role="button" tabindex="0" title="जन्म वर्षानुसार क्रमवारी लावा">
-                        <div class="th-content"><span>जन्म वर्ष</span><span class="th-sort-icon"><?= $sortBy === 'birth_year' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
-                    </th>
-                    <th class="sortable-th <?= $sortBy === 'registration_no' ? 'th-sorted' : '' ?>" data-sort="registration_no" role="button" tabindex="0" title="नोंदणी क्रमांकानुसार क्रमवारी लावा">
-                        <div class="th-content"><span>नोंदणी क्र.</span><span class="th-sort-icon"><?= $sortBy === 'registration_no' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
+                        <div class="th-content"><span>जन्म वर्ष.नोंदणी वर्ष</span><span class="th-sort-icon"><?= $sortBy === 'birth_year' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
                     </th>
                     <th class="sortable-th <?= $sortBy === 'varn' ? 'th-sorted' : '' ?>" data-sort="varn" role="button" tabindex="0" title="वर्ण / चष्मा नुसार क्रमवारी लावा">
                         <div class="th-content"><span>वर्ण / चष्मा</span><span class="th-sort-icon"><?= $sortBy === 'varn' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
@@ -281,7 +278,7 @@ while ($row = $res->fetch_assoc()) $profiles[] = $row;
             <tbody id="results">
                 <?php if (empty($profiles)): ?>
                 <tr>
-                    <td colspan="13" style="text-align:center;padding:36px;color:#9ca3af;font-size:13px;">
+                    <td colspan="12" style="text-align:center;padding:36px;color:#9ca3af;font-size:13px;">
                         <div style="font-size:36px;margin-bottom:8px;">👤</div>
                         <div>अजून कोणतीही प्रोफाइल नाही</div>
                     </td>
@@ -308,8 +305,7 @@ while ($row = $res->fetch_assoc()) $profiles[] = $row;
                     <td><?= fmtSalaryShort((int)$row['salary']) ?></td>
                     <td><?= htmlspecialchars($row['education']) ?></td>
                     <td><?= htmlspecialchars($row['city']) ?></td>
-                    <td><?= htmlspecialchars(resolveFullYear($row['birth_year'])) ?></td>
-                    <td><?= htmlspecialchars(fmtNondaniKramank($row['registration_year'] ?? '', $row['registration_no'])) ?></td>
+                    <td><?= htmlspecialchars(fmtBirthRegYear($row['birth_year'], $row['registration_year'] ?? '')) ?></td>
                     <td><?= htmlspecialchars(fmtVarnChashma($row['varn'] ?? '', (int)($row['chashma'] ?? 0))) ?></td>
                     <td><?= htmlspecialchars($row['aahar'] ?? '—') ?></td>
                     <td><?= htmlspecialchars($row['rashi'] ?? '') ?></td>

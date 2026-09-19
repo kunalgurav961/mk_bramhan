@@ -134,7 +134,9 @@ if (isset($_POST['update'])) {
     $aahar           = trim($_POST['aahar'] ?? '');
     $registration_year = trim($_POST['registration_year'] ?? '');
 
-    if ($registration_no === '') $errors[] = 'नोंदणी क्रमांक आवश्यक आहे.';
+    if ($registration_no === '') {
+        $registration_no = 'MKB' . date('YmdHis') . rand(10, 99);
+    }
     if (!in_array($gender, [1, 2])) $errors[] = 'लिंग निवडा.';
     if ($birth_year === '') $errors[] = 'जन्म वर्ष आवश्यक आहे.';
     if ($name === '')  $errors[] = 'नाव आवश्यक आहे.';
@@ -280,8 +282,8 @@ $existingImages = fetchImages($conn, $id);
 
             <div class="section-title">ओळख तपशील</div>
             <div>
-                <label class="field-label">नोंदणी क्रमांक *</label>
-                <input type="text" name="registration_no" class="field" value="<?= val('registration_no',$profile) ?>" required>
+                <label class="field-label">नोंदणी क्रमांक</label>
+                <input type="text" name="registration_no" class="field" value="<?= val('registration_no',$profile) ?>">
             </div>
             <div>
                 <label class="field-label">मोबाईल नंबर</label>

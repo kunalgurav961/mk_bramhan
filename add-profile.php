@@ -39,8 +39,9 @@ if (isset($_POST['save'])) {
     $aahar           = trim($_POST['aahar'] ?? '');
     $registration_year = trim($_POST['registration_year'] ?? '');
 
-    // Basic validation
-    if ($registration_no === '') $errors[] = 'नोंदणी क्रमांक आवश्यक आहे.';
+    if ($registration_no === '') {
+        $registration_no = 'MKB' . date('YmdHis') . rand(10, 99);
+    }
     if (!in_array($gender, [1, 2])) $errors[] = 'लिंग निवडा.';
     if ($birth_year === '')  $errors[] = 'जन्म वर्ष आवश्यक आहे (उदा. 95, 01).';
     if ($name === '')  $errors[] = 'नाव आवश्यक आहे.';
@@ -238,10 +239,10 @@ if (isset($_POST['save'])) {
 
             <!-- Registration No -->
             <div>
-                <label class="field-label" for="registration_no">नोंदणी क्रमांक *</label>
+                <label class="field-label" for="registration_no">नोंदणी क्रमांक</label>
                 <input type="text" id="registration_no" name="registration_no" class="field"
                        placeholder="उदा. MKB001"
-                       value="<?= htmlspecialchars($_POST['registration_no'] ?? '') ?>" required>
+                       value="<?= htmlspecialchars($_POST['registration_no'] ?? '') ?>">
             </div>
 
             <!-- Mobile Number -->

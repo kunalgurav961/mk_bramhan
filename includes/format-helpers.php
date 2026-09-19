@@ -54,6 +54,25 @@ function fmtSalaryShort(int $val): string {
 }
 
 /**
+ * Format जन्म वर्ष.नोंदणी वर्ष: "1994.04"
+ * Examples: (1994, 04) -> "1994.04", (94, 4) -> "1994.04", (1994, 2004) -> "1994.04", (1994, '') -> "1994"
+ */
+function fmtBirthRegYear(?string $birthYear, ?string $regYear): string {
+    $by = resolveFullYear(trim((string)$birthYear));
+    if ($by === '') return '—';
+    $ry = trim((string)$regYear);
+    if ($ry !== '') {
+        if (strlen($ry) === 4) {
+            $ry = substr($ry, -2);
+        } else {
+            $ry = str_pad($ry, 2, '0', STR_PAD_LEFT);
+        }
+        return $by . '.' . $ry;
+    }
+    return $by;
+}
+
+/**
  * Format नोंदणी क्रमांक: "registrationYear.regNo" (e.g. "1993.01")
  * Falls back to just regNo if regYear is empty.
  */
