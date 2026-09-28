@@ -13,8 +13,11 @@ if (isset($_POST['login'])) {
     if ($username === '' || $password === '') {
         $error = 'Username आणि Password भरा.';
     } else {
-        $stmt = $conn->prepare("SELECT id, full_name, password FROM admins WHERE username = ? LIMIT 1");
-        $stmt->bind_param('s', $username);
+        $alternateUsername = $username === 'mk_bramhan'
+            ? 'mk_braman'
+            : ($username === 'mk_braman' ? 'mk_bramhan' : $username);
+        $stmt = $conn->prepare("SELECT id, full_name, password FROM admins WHERE username IN (?, ?) ORDER BY (username = ?) DESC LIMIT 1");
+        $stmt->bind_param('sss', $username, $alternateUsername, $username);
         $stmt->execute();
         $result = $stmt->get_result();
 

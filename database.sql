@@ -105,8 +105,8 @@ CREATE TABLE `admins` (
 -- ---------------------------------------------------------------------
 -- Default Admin Accounts:
 -- 1) Username: admin      Password: admin123
--- 2) Username: mk_braman  Password: mkbramhan@123
+-- 2) Username: mk_bramhan  Password: mkbramhan@123
 -- ---------------------------------------------------------------------
 INSERT INTO `admins` (`username`, `password`, `full_name`) VALUES
 ('admin', '$2y$10$o.UBhzaA6sRnwn8gbRol1.2ri1KCOxnqsBpjeu51WluL65Gux0Mqi', 'MK Brahman Admin'),
-('mk_braman', '$2y$10$oNtXR.luYTgVFekYFAMu/ewX6zVc5vE3H2IGQF578u.4CGYj3Gcoi', 'MK Brahman Superadmin');
+('mk_bramhan', '$2y$10$oNtXR.luYTgVFekYFAMu/ewX6zVc5vE3H2IGQF578u.4CGYj3Gcoi', 'MK Brahman Superadmin');

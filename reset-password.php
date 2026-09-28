@@ -150,7 +150,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reset_password'])) {
                         <?php endforeach; ?>
                         <?php if (empty($admins)): ?>
                             <option value="admin" selected>admin (नवीन User तयार होईल)</option>
-                            <option value="mk_braman">mk_braman (नवीन User तयार होईल)</option>
+                            <option value="mk_bramhan">mk_bramhan (नवीन User तयार होईल)</option>
                         <?php endif; ?>
                     </select>
                 </div>

@@ -142,15 +142,15 @@ if ($check && $check->num_rows === 0) {
     $success[] = 'ℹ️ Admin user already exists — skipped';
 }
 
-// Check if mk_braman exists
-$check2 = $conn->query("SELECT id FROM admins WHERE username='mk_braman' LIMIT 1");
+// Check if mk_bramhan exists
+$check2 = $conn->query("SELECT id FROM admins WHERE username='mk_bramhan' LIMIT 1");
 if ($check2 && $check2->num_rows === 0) {
     $hashedPwd2 = password_hash('mkbramhan@123', PASSWORD_BCRYPT);
     $stmt2 = $conn->prepare("INSERT INTO admins (username, password, full_name) VALUES (?, ?, ?)");
     $fullName2 = 'MK Brahman Superadmin';
-    $stmt2->bind_param('sss', 'mk_braman', $hashedPwd2, $fullName2);
+    $stmt2->bind_param('sss', 'mk_bramhan', $hashedPwd2, $fullName2);
     if ($stmt2->execute()) {
-        $success[] = '✅ Superadmin user created (username: <strong>mk_braman</strong>, password: <strong>mkbramhan@123</strong>)';
+        $success[] = '✅ Superadmin user created (username: <strong>mk_bramhan</strong>, password: <strong>mkbramhan@123</strong>)';
     }
 }
 
