@@ -57,6 +57,18 @@ function getDB(): mysqli {
             $conn->query("ALTER TABLE `profiles` ADD COLUMN `aahar` VARCHAR(50) DEFAULT NULL COMMENT 'Diet / आहार' AFTER `chashma`");
         }
 
+        // Auto-migration: ensure 'rashi' column exists
+        $chk = $conn->query("SHOW COLUMNS FROM `profiles` LIKE 'rashi'");
+        if ($chk && $chk->num_rows === 0) {
+            $conn->query("ALTER TABLE `profiles` ADD COLUMN `rashi` VARCHAR(50) DEFAULT NULL COMMENT 'राशी' AFTER `aahar`");
+        }
+
+        // Auto-migration: ensure 'nadi' column exists
+        $chk = $conn->query("SHOW COLUMNS FROM `profiles` LIKE 'nadi'");
+        if ($chk && $chk->num_rows === 0) {
+            $conn->query("ALTER TABLE `profiles` ADD COLUMN `nadi` VARCHAR(50) DEFAULT NULL COMMENT 'नाडी: प्रथम / मध्य / अंत्य' AFTER `rashi`");
+        }
+
     }
     return $conn;
 }

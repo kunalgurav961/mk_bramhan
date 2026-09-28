@@ -57,6 +57,8 @@ CREATE TABLE IF NOT EXISTS `profiles` (
     `varn`            VARCHAR(50)       DEFAULT NULL COMMENT 'Skin color / वर्ण',
     `chashma`         TINYINT(1)        NOT NULL DEFAULT 0 COMMENT 'Glasses yes/no',
     `aahar`           VARCHAR(50)       DEFAULT NULL COMMENT 'Diet / आहार',
+    `rashi`           VARCHAR(50)       DEFAULT NULL COMMENT 'राशी',
+    `nadi`            VARCHAR(50)       DEFAULT NULL COMMENT 'नाडी: प्रथम / मध्य / अंत्य',
     `education`       VARCHAR(100)      DEFAULT NULL,
     `occupation`      VARCHAR(100)      DEFAULT NULL,
     `city`            VARCHAR(80)       NOT NULL,

@@ -428,9 +428,47 @@ input, select, textarea { font-family: inherit; }
     padding: 7px 6px;
     vertical-align: middle;
     white-space: nowrap;
-    max-width: 90px;
+    max-width: 100px;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* First Column — Minimum Practical Width & Sticky Navigation */
+.compact-table th.col-name,
+.compact-table td.col-name {
+    width: max-content;
+    min-width: 135px;
+    max-width: 220px;
+    white-space: nowrap;
+    position: sticky;
+    left: 0;
+}
+
+.compact-table th.col-name {
+    z-index: 55;
+    background: var(--bg-header);
+    box-shadow: 2px 0 5px rgba(0,0,0,0.12);
+}
+
+.compact-table td.col-name {
+    z-index: 20;
+    background: #ffffff;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+}
+
+.compact-table tbody tr:hover td.col-name,
+.compact-table tbody tr.profile-row:hover td.col-name {
+    background: #eef2ff;
+}
+
+.compact-table tbody tr.profile-row:active td.col-name {
+    background: #dbeafe;
+}
+
+.profile-name-text {
+    font-weight: 500;
+    color: var(--text-primary);
+    vertical-align: middle;
 }
 
 /* Gender badge */
@@ -646,6 +684,50 @@ input, select, textarea { font-family: inherit; }
 /* ---------- RESPONSIVE TWEAKS ---------- */
 @media (min-width: 480px) {
     .container { box-shadow: var(--shadow-md); }
+}
+
+@media (min-width: 640px) {
+    .container {
+        max-width: 640px;
+    }
+}
+
+@media (min-width: 768px) {
+    .container {
+        max-width: 860px;
+    }
+    .compact-table {
+        font-size: 12px;
+    }
+    .compact-table th {
+        padding: 9px 8px;
+        font-size: 11.5px;
+    }
+    .compact-table td {
+        padding: 8px 8px;
+        max-width: 120px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .container {
+        max-width: 1140px;
+    }
+    .compact-table th {
+        padding: 10px 10px;
+        font-size: 12px;
+    }
+    .compact-table td {
+        padding: 9px 10px;
+        font-size: 12px;
+        max-width: 160px;
+    }
+}
+
+@media (min-width: 1280px) {
+    .container {
+        max-width: 1280px;
+    }
 }
 
 /* Scrollbar styling */

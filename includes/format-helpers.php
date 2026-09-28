@@ -8,13 +8,30 @@
  * Resolve a stored birth_year (2-digit or 4-digit) to a full 4-digit year.
  * 4-digit input → returned as-is.
  * 2-digit input → 00-30 → 2000-2030, 31-99 → 1931-1999.
+ * Empty/null/invalid → returns empty string ''.
  */
-function resolveFullYear(string $raw): string {
-    $raw = trim($raw);
-    if (strlen($raw) === 4) return $raw;           // already full year
-    $by = (int)$raw;
-    return ($by >= 0 && $by <= 30) ? '20' . str_pad($raw, 2, '0', STR_PAD_LEFT)
-                                   : '19' . $raw;
+function resolveFullYear(?string $raw): string {
+    $raw = trim((string)$raw);
+    if ($raw === '' || $raw === '0') return '';
+    if (strlen($raw) === 4 && ctype_digit($raw)) return $raw;
+    if (ctype_digit($raw)) {
+        $by = (int)$raw;
+        return ($by >= 0 && $by <= 30) ? '20' . str_pad($raw, 2, '0', STR_PAD_LEFT)
+                                       : '19' . str_pad($raw, 2, '0', STR_PAD_LEFT);
+    }
+    return $raw;
+}
+
+/**
+ * 2-digit birth-year reference value (00 – 99) for internal/reference purposes only.
+ * MUST NOT be visible to general public audience.
+ */
+function getBirthYearRef(?string $raw): string {
+    $year = resolveFullYear($raw);
+    if (strlen($year) >= 2) {
+        return substr($year, -2);
+    }
+    return '';
 }
 
 /**
@@ -99,9 +116,39 @@ function fmtVarnChashma(string $varn, int $chashma): string {
 }
 
 /**
+ * Format वर्ण (Varna) for member listing:
+ * Displays Marathi skin tone (गोरा, गहू, गव्हाळ, सावळा).
+ * If glasses (chashma) are present, adds a subtle icon/tag.
+ */
+function fmtVarn(?string $varn, int $chashma = 0): string {
+    $v = trim((string)$varn);
+    if ($v === '') {
+        return $chashma ? '— (👓)' : '—';
+    }
+    return $chashma ? "{$v} 👓" : $v;
+}
+
+/**
+ * Format Rashi and Nadi together if desired:
+ * Examples:
+ *   ("कर्क", "मध्य") → "कर्क — मध्य"
+ *   ("कर्क", "")     → "कर्क"
+ *   ("", "मध्य")     → "मध्य"
+ */
+function fmtRashiNadi(?string $rashi, ?string $nadi): string {
+    $r = trim((string)$rashi);
+    $n = trim((string)$nadi);
+    if ($r !== '' && $n !== '') {
+        return "{$r} — {$n}";
+    }
+    return $r !== '' ? $r : ($n !== '' ? $n : '—');
+}
+
+/**
  * @deprecated Use fmtNondaniKramank() instead.
  * Kept for backward compatibility during transition.
  */
 function fmtBirthReg(string $birthYear, string $regNo): string {
     return resolveFullYear($birthYear) . '.' . $regNo;
 }
+

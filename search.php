@@ -37,11 +37,11 @@ $genderFilter = in_array($genderParam, ['1', '2'], true) ? (int)$genderParam : n
 $allowedSortCols = [
     'id', 'name', 'birth_year', 'city', 'registration_no',
     'salary', 'height', 'weight', 'education', 'gender', 'shortlisted', 'jaat',
-    'varn', 'chashma', 'aahar', 'rashi'
+    'varn', 'chashma', 'aahar', 'rashi', 'nadi'
 ];
 $sortBy  = in_array($_GET['sort_by'] ?? '', $allowedSortCols, true)
            ? $_GET['sort_by']
-           : 'id';
+           : 'birth_year';
 $sortDir = strtoupper($_GET['sort_dir'] ?? 'DESC') === 'ASC' ? 'ASC' : 'DESC';
 
 // ── SMART SEARCH PARSING ──────────────────────────────────────────
@@ -135,10 +135,16 @@ switch ($sortBy) {
         }
         break;
     case 'birth_year':
+        $yearNormSQL = "CASE
+            WHEN birth_year IS NULL OR birth_year = '' OR birth_year = '0' THEN 0
+            WHEN CAST(birth_year AS UNSIGNED) <= 30 THEN 2000 + CAST(birth_year AS UNSIGNED)
+            WHEN CAST(birth_year AS UNSIGNED) < 100 THEN 1900 + CAST(birth_year AS UNSIGNED)
+            ELSE CAST(birth_year AS UNSIGNED)
+        END";
         if ($sortDir === 'ASC') {
-            $orderSQL = "ORDER BY (birth_year = '' OR birth_year IS NULL OR birth_year = '0'), CAST(birth_year AS UNSIGNED) ASC, id DESC";
+            $orderSQL = "ORDER BY ({$yearNormSQL} = 0) ASC, {$yearNormSQL} ASC, id DESC";
         } else {
-            $orderSQL = "ORDER BY CAST(birth_year AS UNSIGNED) DESC, id DESC";
+            $orderSQL = "ORDER BY ({$yearNormSQL} = 0) ASC, {$yearNormSQL} DESC, id DESC";
         }
         break;
     case 'weight':
@@ -181,6 +187,9 @@ switch ($sortBy) {
     case 'rashi':
         $orderSQL = "ORDER BY (rashi = '' OR rashi IS NULL), rashi {$sortDir}, id DESC";
         break;
+    case 'nadi':
+        $orderSQL = "ORDER BY (nadi = '' OR nadi IS NULL), nadi {$sortDir}, id DESC";
+        break;
     case 'id':
     default:
         $orderSQL = "ORDER BY id {$sortDir}";
@@ -190,7 +199,7 @@ switch ($sortBy) {
 $sql = "
     SELECT id, gender, birth_year, name, gotra, height_ft, height_in,
            salary, weight, education, city, registration_no, registration_year, shortlisted,
-           jaat, varn, chashma, aahar, rashi, profile_image, profile_photo, mobile_no,
+           jaat, varn, chashma, aahar, rashi, nadi, profile_image, profile_photo, mobile_no,
            COALESCE(mobile_no, mobile) AS display_mobile
     FROM   profiles
     {$whereSQL}
@@ -240,23 +249,23 @@ if (empty($rows)): ?>
     role="button"
     tabindex="0"
     aria-label="<?= htmlspecialchars($row['name']) ?> ची प्रोफाइल पहा">
-    <td>
+    <td class="col-name">
         <?php if ((int)$row['gender'] === 1): ?>
             <span class="gender-m">मुलगा</span>
         <?php else: ?>
             <span class="gender-f">मुलगी</span>
         <?php endif; ?>
+        <span class="profile-name-text"><?= htmlspecialchars(fmtNameJaat($row['name'], $row['jaat'] ?? '')) ?></span>
     </td>
-    <td><?= htmlspecialchars(fmtNameJaat($row['name'], $row['jaat'] ?? '')) ?></td>
-    <td><?= htmlspecialchars(fmtHeightWeight((int)$row['height_ft'], (int)$row['height_in'], $row['weight'] ?? 0)) ?></td>
-    <td><?= fmtSalaryShort((int)$row['salary']) ?></td>
-    <td style="max-width:70px;overflow:hidden;text-overflow:ellipsis;"><?= htmlspecialchars($row['education']) ?></td>
-    <td><?= htmlspecialchars($row['city']) ?></td>
     <td><?= htmlspecialchars(fmtBirthRegYear($row['birth_year'], $row['registration_year'] ?? '')) ?></td>
-    <td><?= htmlspecialchars(fmtVarnChashma($row['varn'] ?? '', (int)($row['chashma'] ?? 0))) ?></td>
-    <td><?= htmlspecialchars($row['aahar'] ?? '—') ?></td>
-    <td><?= htmlspecialchars($row['rashi'] ?? '') ?></td>
-    <td><?= htmlspecialchars($row['display_mobile'] ?? '') ?></td>
+    <td><?= htmlspecialchars($row['rashi'] ?? '—') ?></td>
+    <td><?= htmlspecialchars($row['nadi'] ?? '—') ?></td>
+    <td><?= htmlspecialchars(fmtVarn($row['varn'] ?? '', (int)($row['chashma'] ?? 0))) ?></td>
+    <td class="col-secondary"><?= htmlspecialchars(fmtHeightWeight((int)$row['height_ft'], (int)$row['height_in'], $row['weight'] ?? 0)) ?></td>
+    <td class="col-secondary"><?= fmtSalaryShort((int)$row['salary']) ?></td>
+    <td class="col-secondary"><?= htmlspecialchars($row['city']) ?></td>
+    <td class="col-secondary"><?= htmlspecialchars($row['education']) ?></td>
+    <td class="col-secondary"><?= htmlspecialchars($row['aahar'] ?? '—') ?></td>
     <td class="col-heart" onclick="event.stopPropagation()">
         <button class="shortlist-btn"
                 data-id="<?= (int)$row['id'] ?>"

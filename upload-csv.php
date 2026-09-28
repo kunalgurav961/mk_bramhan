@@ -25,6 +25,7 @@ const REQUIRED_COLS = ['gender', 'birth_year', 'name', 'gotra', 'city'];
 const ALL_COLS      = [
     'registration_no', 'registration_year', 'gender', 'birth_year', 'name', 'gotra',
     'height_ft', 'height_in', 'salary', 'weight', 'varn', 'chashma', 'aahar',
+    'rashi', 'nadi',
     'education', 'occupation', 'city',
     'father_name', 'mother_name', 'family_details', 'about_me',
 ];
@@ -117,10 +118,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['do_import'])) {
         $stmt = $conn->prepare("
             INSERT INTO profiles
                 (registration_no, registration_year, gender, birth_year, name, gotra,
-                 height_ft, height_in, salary, weight, varn, chashma,
+                 height_ft, height_in, salary, weight, varn, chashma, aahar, rashi, nadi,
                  education, occupation, city,
                  father_name, mother_name, family_details, about_me)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
 
         $conn->begin_transaction();
@@ -156,6 +157,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['do_import'])) {
             $weight      = (int)($row['weight'] ?? 0);
             $varn        = trim($row['varn'] ?? '');
             $chashma     = (int)($row['chashma'] ?? 0);
+            $aahar       = trim($row['aahar'] ?? '');
+            $rashi       = trim($row['rashi'] ?? '');
+            $nadi        = trim($row['nadi'] ?? '');
             $education   = trim($row['education'] ?? '');
             $occupation  = trim($row['occupation'] ?? '');
             $city        = trim($row['city'] ?? '');
@@ -164,9 +168,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['do_import'])) {
             $familyDet   = trim($row['family_details'] ?? '');
             $aboutMe     = trim($row['about_me'] ?? '');
 
-            $stmt->bind_param('ssisssiiiisisssssss',
+            $stmt->bind_param('ssisssiiiissssssssssss',
                 $regNo, $regYear, $gender, $birthYear, $name, $gotra,
-                $heightFt, $heightIn, $salary, $weight, $varn, $chashma,
+                $heightFt, $heightIn, $salary, $weight, $varn, $chashma, $aahar, $rashi, $nadi,
                 $education, $occupation, $city,
                 $fatherName, $motherName, $familyDet, $aboutMe
             );

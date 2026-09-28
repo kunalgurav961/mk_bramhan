@@ -17,10 +17,15 @@ $conn = getDB();
 $stmt = $conn->prepare("
     SELECT registration_no, registration_year, name, gender, birth_year,
            gotra, height_ft, height_in, salary, weight, varn, chashma, aahar,
-           education, occupation, city
+           rashi, nadi, education, occupation, city
     FROM   profiles
     WHERE  shortlisted = 1
-    ORDER  BY id DESC
+    ORDER  BY CASE
+        WHEN birth_year IS NULL OR birth_year = '' OR birth_year = '0' THEN 0
+        WHEN CAST(birth_year AS UNSIGNED) <= 30 THEN 2000 + CAST(birth_year AS UNSIGNED)
+        WHEN CAST(birth_year AS UNSIGNED) < 100 THEN 1900 + CAST(birth_year AS UNSIGNED)
+        ELSE CAST(birth_year AS UNSIGNED)
+    END DESC, id DESC
 ");
 $stmt->execute();
 $result = $stmt->get_result();
@@ -46,10 +51,12 @@ fputcsv($out, [
     'नाव',
     'लिंग',
     'जन्म वर्ष',
+    'राशी',
+    'नाडी',
+    'वर्ण',
     'गोत्र',
     'उंची',
     'वजन (kg)',
-    'वर्ण',
     'चष्मा',
     'आहार',
     'पगार',
@@ -60,7 +67,7 @@ fputcsv($out, [
 
 // Data rows
 while ($row = $result->fetch_assoc()) {
-    $gender   = ((int)$row['gender'] === 1) ? '1' : '0';
+    $gender   = ((int)$row['gender'] === 1) ? 'मुलगा' : 'मुलगी';
     $fullYear = resolveFullYear($row['birth_year']);
     $height   = (int)$row['height_ft'] . "'" . (int)$row['height_in'] . '"';
     $salary   = $row['salary'] ? fmtSalaryShort((int)$row['salary']) : '—';
@@ -74,10 +81,12 @@ while ($row = $result->fetch_assoc()) {
         $row['name'],
         $gender,
         $fullYear,
+        $row['rashi'] ?: '—',
+        $row['nadi'] ?: '—',
+        $varn,
         $row['gotra'],
         $height,
         $weight,
-        $varn,
         $chashma,
         $row['aahar'] ?? '—',
         $salary,

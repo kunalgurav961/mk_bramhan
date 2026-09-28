@@ -22,7 +22,7 @@ $stmt = $conn->prepare("
            father_name, mother_name, family_details, about_me,
            shortlisted, created_at, status,
            mobile_no, mobile, mobile_2, mobile_3, mobile_4,
-           jaat, rashi,
+           jaat, rashi, nadi,
            sheet_img_1, sheet_img_2, sheet_img_3, sheet_img_4,
            COALESCE(profile_image, profile_photo) AS img_file
     FROM   profiles
@@ -591,6 +591,12 @@ if (str_contains($backUrl, 'admin-dashboard')) $backLabel = 'Admin Dashboard';
             <div class="info-row">
                 <span class="info-label">रास</span>
                 <span class="info-value"><?= htmlspecialchars($p['rashi']) ?></span>
+            </div>
+            <?php endif; ?>
+            <?php if (!empty($p['nadi'])): ?>
+            <div class="info-row">
+                <span class="info-label">नाडी</span>
+                <span class="info-value"><?= htmlspecialchars($p['nadi']) ?></span>
             </div>
             <?php endif; ?>
             <div class="info-row">

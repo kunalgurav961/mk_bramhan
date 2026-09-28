@@ -37,6 +37,8 @@ if (isset($_POST['save'])) {
     $varn            = trim($_POST['varn'] ?? '');
     $chashma         = (int)($_POST['chashma'] ?? 0);
     $aahar           = trim($_POST['aahar'] ?? '');
+    $rashi           = trim($_POST['rashi'] ?? '');
+    $nadi            = trim($_POST['nadi'] ?? '');
     $registration_year = trim($_POST['registration_year'] ?? '');
 
     if ($registration_no === '') {
@@ -85,15 +87,15 @@ if (isset($_POST['save'])) {
             $stmt = $conn->prepare("
                 INSERT INTO profiles
                     (registration_no, registration_year, gender, birth_year, name, gotra,
-                     height_ft, height_in, salary, weight, varn, chashma, aahar,
+                     height_ft, height_in, salary, weight, varn, chashma, aahar, rashi, nadi,
                      education, occupation, city,
                      mobile_no, father_name, mother_name, family_details, about_me, profile_image)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             $stmt->bind_param(
-                'ssisssiiiisississsssss',
+                'ssisssiiiisissssssssssss',
                 $registration_no, $registration_year, $gender, $birth_year, $name, $gotra,
-                $height_ft, $height_in, $salary, $weight, $varn, $chashma, $aahar,
+                $height_ft, $height_in, $salary, $weight, $varn, $chashma, $aahar, $rashi, $nadi,
                 $education, $occupation, $city,
                 $mobile_no, $father_name, $mother_name, $family_details, $about_me, $primaryImg
             );
@@ -353,8 +355,41 @@ if (isset($_POST['save'])) {
             <div>
                 <label class="field-label" for="varn">वर्ण</label>
                 <input type="text" id="varn" name="varn" class="field"
-                       placeholder="उदा. गोरा, गहू वर्ण"
+                       placeholder="उदा. गोरा, गहू / गव्हाळ, सावळा"
                        value="<?= htmlspecialchars($_POST['varn'] ?? '') ?>">
+            </div>
+
+            <!-- Rashi -->
+            <div>
+                <label class="field-label" for="rashi">राशी</label>
+                <input type="text" id="rashi" name="rashi" list="rashiList" class="field"
+                       placeholder="उदा. मेष, वृषभ, मिथुन..."
+                       value="<?= htmlspecialchars($_POST['rashi'] ?? '') ?>">
+                <datalist id="rashiList">
+                    <option value="मेष">
+                    <option value="वृषभ">
+                    <option value="मिथुन">
+                    <option value="कर्क">
+                    <option value="सिंह">
+                    <option value="कन्या">
+                    <option value="तूळ">
+                    <option value="वृश्चिक">
+                    <option value="धनु">
+                    <option value="मकर">
+                    <option value="कुंभ">
+                    <option value="मीन">
+                </datalist>
+            </div>
+
+            <!-- Nadi -->
+            <div>
+                <label class="field-label" for="nadi">नाडी</label>
+                <select id="nadi" name="nadi" class="field">
+                    <option value="" <?= (($_POST['nadi'] ?? '') === '') ? 'selected' : '' ?>>निवडा (माहित नाही)</option>
+                    <option value="प्रथम" <?= (($_POST['nadi'] ?? '') === 'प्रथम') ? 'selected' : '' ?>>प्रथम</option>
+                    <option value="मध्य" <?= (($_POST['nadi'] ?? '') === 'मध्य') ? 'selected' : '' ?>>मध्य</option>
+                    <option value="अंत्य" <?= (($_POST['nadi'] ?? '') === 'अंत्य') ? 'selected' : '' ?>>अंत्य</option>
+                </select>
             </div>
 
             <!-- Chashma -->

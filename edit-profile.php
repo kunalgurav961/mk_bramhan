@@ -132,6 +132,8 @@ if (isset($_POST['update'])) {
     $varn            = trim($_POST['varn'] ?? '');
     $chashma         = (int)($_POST['chashma'] ?? 0);
     $aahar           = trim($_POST['aahar'] ?? '');
+    $rashi           = trim($_POST['rashi'] ?? '');
+    $nadi            = trim($_POST['nadi'] ?? '');
     $registration_year = trim($_POST['registration_year'] ?? '');
 
     if ($registration_no === '') {
@@ -148,23 +150,23 @@ if (isset($_POST['update'])) {
             $stmt = $conn->prepare("
                 UPDATE profiles SET
                     registration_no=?, registration_year=?, gender=?, birth_year=?, name=?, gotra=?,
-                    height_ft=?, height_in=?, salary=?, weight=?, varn=?, chashma=?, aahar=?,
+                    height_ft=?, height_in=?, salary=?, weight=?, varn=?, chashma=?, aahar=?, rashi=?, nadi=?,
                     education=?, occupation=?, city=?,
                     mobile_no=?,
                     father_name=?, mother_name=?, family_details=?, about_me=?,
                     updated_at=NOW()
                 WHERE id=?
             ");
-            $stmt->bind_param('ssisssiiiisississsssssi',
+            $stmt->bind_param('ssisssiiiisisssssssssssi',
                 $registration_no, $registration_year, $gender, $birth_year, $name, $gotra,
-                $height_ft, $height_in, $salary, $weight, $varn, $chashma, $aahar,
+                $height_ft, $height_in, $salary, $weight, $varn, $chashma, $aahar, $rashi, $nadi,
                 $education, $occupation, $city,
                 $mobile_no, $father_name, $mother_name, $family_details, $about_me, $id
             );
             $stmt->execute();
             $success = 'प्रोफाइल यशस्वीरित्या अपडेट केली! ✅';
             $profile = array_merge($profile, compact('registration_no','registration_year','gender','birth_year','name','gotra',
-                'height_ft','height_in','salary','weight','varn','chashma','aahar','education','occupation','city',
+                'height_ft','height_in','salary','weight','varn','chashma','aahar','rashi','nadi','education','occupation','city',
                 'mobile_no','father_name','mother_name','family_details','about_me'));
         } catch (\mysqli_sql_exception $e) {
             $errors[] = $e->getCode() === 1062
@@ -337,7 +339,35 @@ $existingImages = fetchImages($conn, $id);
             </div>
             <div>
                 <label class="field-label">वर्ण</label>
-                <input type="text" name="varn" class="field" placeholder="उदा. गोरा, गहू वर्ण" value="<?= val('varn',$profile) ?>">
+                <input type="text" name="varn" class="field" placeholder="उदा. गोरा, गहू / गव्हाळ, सावळा" value="<?= val('varn',$profile) ?>">
+            </div>
+            <div>
+                <label class="field-label">राशी</label>
+                <input type="text" name="rashi" list="rashiListEdit" class="field" placeholder="उदा. मेष, वृषभ, मिथुन..." value="<?= val('rashi',$profile) ?>">
+                <datalist id="rashiListEdit">
+                    <option value="मेष">
+                    <option value="वृषभ">
+                    <option value="मिथुन">
+                    <option value="कर्क">
+                    <option value="सिंह">
+                    <option value="कन्या">
+                    <option value="तूळ">
+                    <option value="वृश्चिक">
+                    <option value="धनु">
+                    <option value="मकर">
+                    <option value="कुंभ">
+                    <option value="मीन">
+                </datalist>
+            </div>
+            <div>
+                <label class="field-label">नाडी</label>
+                <?php $nadiVal = $_POST['nadi'] ?? $profile['nadi'] ?? ''; ?>
+                <select name="nadi" class="field">
+                    <option value="" <?= ($nadiVal === '') ? 'selected' : '' ?>>निवडा (माहित नाही)</option>
+                    <option value="प्रथम" <?= ($nadiVal === 'प्रथम') ? 'selected' : '' ?>>प्रथम</option>
+                    <option value="मध्य" <?= ($nadiVal === 'मध्य') ? 'selected' : '' ?>>मध्य</option>
+                    <option value="अंत्य" <?= ($nadiVal === 'अंत्य') ? 'selected' : '' ?>>अंत्य</option>
+                </select>
             </div>
             <div>
                 <label class="field-label">चष्मा</label>

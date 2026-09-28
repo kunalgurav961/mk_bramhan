@@ -175,7 +175,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // State
     let activeGender = '';
-    let sortBy       = sortByEl ? sortByEl.value : 'id';
+    let sortBy       = sortByEl ? sortByEl.value : 'birth_year';
     let sortDir      = sortDirBtn?.dataset.dir || 'DESC';
 
     // Default sort direction when a column is first selected
@@ -194,6 +194,7 @@ document.addEventListener('DOMContentLoaded', function () {
         jaat:            'ASC',
         varn:            'ASC',
         rashi:           'ASC',
+        nadi:            'ASC',
     };
 
     // Keep all sort controls across the page perfectly synchronized
