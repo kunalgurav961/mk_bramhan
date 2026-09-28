@@ -43,34 +43,67 @@ CREATE DATABASE IF NOT EXISTS `mk_brahman`
 USE `mk_brahman`;
 
 CREATE TABLE IF NOT EXISTS `profiles` (
-    `id`              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    `registration_no` VARCHAR(30)       NOT NULL,
-    `registration_year` VARCHAR(4)      DEFAULT NULL COMMENT 'Registration year for nondani kramank',
-    `gender`          TINYINT           NOT NULL COMMENT '1=Mulaga,2=Mulagi',
-    `birth_year`      VARCHAR(4)        NOT NULL,
-    `name`            VARCHAR(100)      NOT NULL,
-    `gotra`           VARCHAR(80)       NOT NULL,
-    `height_ft`       TINYINT UNSIGNED  NOT NULL DEFAULT 5,
-    `height_in`       TINYINT UNSIGNED  NOT NULL DEFAULT 0,
-    `salary`          SMALLINT UNSIGNED NOT NULL DEFAULT 0,
-    `weight`          SMALLINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Weight in kg',
-    `varn`            VARCHAR(50)       DEFAULT NULL COMMENT 'Skin color / वर्ण',
-    `chashma`         TINYINT(1)        NOT NULL DEFAULT 0 COMMENT 'Glasses yes/no',
-    `aahar`           VARCHAR(50)       DEFAULT NULL COMMENT 'Diet / आहार',
-    `rashi`           VARCHAR(50)       DEFAULT NULL COMMENT 'राशी',
-    `nadi`            VARCHAR(50)       DEFAULT NULL COMMENT 'नाडी: प्रथम / मध्य / अंत्य',
-    `education`       VARCHAR(100)      DEFAULT NULL,
-    `occupation`      VARCHAR(100)      DEFAULT NULL,
-    `city`            VARCHAR(80)       NOT NULL,
-    `shortlisted`     TINYINT(1)        NOT NULL DEFAULT 0,
-    `status`          TINYINT(1)        NOT NULL DEFAULT 1,
-    `created_at`      DATETIME          NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at`      DATETIME          NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `id`                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `registration_no`   VARCHAR(50)       NOT NULL,
+    `registration_year` VARCHAR(4)        DEFAULT NULL COMMENT 'Registration year for nondani kramank',
+    `gender`            TINYINT           NOT NULL COMMENT '1=Mulaga, 2=Mulagi',
+    `birth_year`        VARCHAR(4)        NOT NULL,
+    `name`              VARCHAR(150)      NOT NULL,
+    `jaat`              VARCHAR(80)       DEFAULT NULL COMMENT 'जात (e.g. देशस्थ, कोकणस्थ)',
+    `gotra`             VARCHAR(80)       NOT NULL,
+    `rashi`             VARCHAR(50)       DEFAULT NULL COMMENT 'राशी',
+    `nadi`              VARCHAR(50)       DEFAULT NULL COMMENT 'नाडी: प्रथम / मध्य / अंत्य',
+    `height_ft`         TINYINT UNSIGNED  NOT NULL DEFAULT 5,
+    `height_in`         TINYINT UNSIGNED  NOT NULL DEFAULT 0,
+    `salary`            INT UNSIGNED      NOT NULL DEFAULT 0,
+    `weight`            SMALLINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Weight in kg',
+    `varn`              VARCHAR(50)       DEFAULT NULL COMMENT 'Skin color / वर्ण',
+    `chashma`           TINYINT(1)        NOT NULL DEFAULT 0 COMMENT 'Glasses: 0=No, 1=Yes',
+    `aahar`             VARCHAR(50)       DEFAULT NULL COMMENT 'Diet / आहार',
+    `education`         VARCHAR(150)      DEFAULT NULL,
+    `occupation`        VARCHAR(150)      DEFAULT NULL,
+    `city`              VARCHAR(100)      NOT NULL,
+    `mobile_no`         VARCHAR(30)       DEFAULT NULL,
+    `mobile`            VARCHAR(30)       DEFAULT NULL,
+    `mobile_2`          VARCHAR(30)       DEFAULT NULL,
+    `mobile_3`          VARCHAR(30)       DEFAULT NULL,
+    `mobile_4`          VARCHAR(30)       DEFAULT NULL,
+    `father_name`       VARCHAR(150)      DEFAULT NULL,
+    `mother_name`       VARCHAR(150)      DEFAULT NULL,
+    `family_details`    TEXT              DEFAULT NULL,
+    `about_me`          TEXT              DEFAULT NULL,
+    `profile_image`     VARCHAR(255)      DEFAULT NULL,
+    `profile_photo`     VARCHAR(255)      DEFAULT NULL,
+    `sheet_img_1`       VARCHAR(500)      DEFAULT NULL,
+    `sheet_img_2`       VARCHAR(500)      DEFAULT NULL,
+    `sheet_img_3`       VARCHAR(500)      DEFAULT NULL,
+    `sheet_img_4`       VARCHAR(500)      DEFAULT NULL,
+    `shortlisted`       TINYINT(1)        NOT NULL DEFAULT 0,
+    `status`            VARCHAR(20)       NOT NULL DEFAULT 'Active' COMMENT 'Active / Inactive',
+    `sheets_synced_at`  DATETIME          DEFAULT NULL,
+    `created_at`        DATETIME          NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`        DATETIME          NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY `uq_reg` (`registration_no`),
-    INDEX `idx_name`  (`name`),
-    INDEX `idx_city`  (`city`),
-    INDEX `idx_gotra` (`gotra`),
-    INDEX `idx_short` (`shortlisted`)
+    INDEX `idx_name`       (`name`),
+    INDEX `idx_birth_year` (`birth_year`),
+    INDEX `idx_gender`     (`gender`),
+    INDEX `idx_city`       (`city`),
+    INDEX `idx_gotra`      (`gotra`),
+    INDEX `idx_rashi`      (`rashi`),
+    INDEX `idx_nadi`       (`nadi`),
+    INDEX `idx_varn`       (`varn`),
+    INDEX `idx_short`      (`shortlisted`),
+    INDEX `idx_status`     (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `profile_images` (
+    `id`         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `profile_id` INT UNSIGNED NOT NULL,
+    `filename`   VARCHAR(255) NOT NULL,
+    `sort_order` INT          NOT NULL DEFAULT 0,
+    `created_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX `idx_profile_id` (`profile_id`),
+    CONSTRAINT `fk_profile_images_profile` FOREIGN KEY (`profile_id`) REFERENCES `profiles` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `admins` (
@@ -107,6 +140,18 @@ if ($check && $check->num_rows === 0) {
     }
 } else {
     $success[] = 'ℹ️ Admin user already exists — skipped';
+}
+
+// Check if mk_braman exists
+$check2 = $conn->query("SELECT id FROM admins WHERE username='mk_braman' LIMIT 1");
+if ($check2 && $check2->num_rows === 0) {
+    $hashedPwd2 = password_hash('mkbramhan@123', PASSWORD_BCRYPT);
+    $stmt2 = $conn->prepare("INSERT INTO admins (username, password, full_name) VALUES (?, ?, ?)");
+    $fullName2 = 'MK Brahman Superadmin';
+    $stmt2->bind_param('sss', 'mk_braman', $hashedPwd2, $fullName2);
+    if ($stmt2->execute()) {
+        $success[] = '✅ Superadmin user created (username: <strong>mk_braman</strong>, password: <strong>mkbramhan@123</strong>)';
+    }
 }
 
 // ── Lock setup ──────────────────────────────────────────────────────────────

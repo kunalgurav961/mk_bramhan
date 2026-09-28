@@ -235,7 +235,7 @@ function getImgSrc(array $row): string {
 
 if (empty($rows)): ?>
 <tr>
-    <td colspan="11" style="text-align:center;padding:36px;color:#9ca3af;font-size:13px;">
+    <td colspan="7" style="text-align:center;padding:36px;color:#9ca3af;font-size:13px;">
         <div style="font-size:36px;margin-bottom:8px;"><?= $shortlisted ? '💔' : '🔍' ?></div>
         <div><?= $shortlisted ? 'शॉर्टलिस्ट रिकामी आहे' : 'कोणतीही प्रोफाइल सापडली नाही' ?></div>
     </td>
@@ -257,15 +257,11 @@ if (empty($rows)): ?>
         <?php endif; ?>
         <span class="profile-name-text"><?= htmlspecialchars(fmtNameJaat($row['name'], $row['jaat'] ?? '')) ?></span>
     </td>
+    <td><?= fmtSalaryShort((int)$row['salary']) ?></td>
+    <td><?= htmlspecialchars(fmtHeightWeight((int)$row['height_ft'], (int)$row['height_in'], $row['weight'] ?? 0)) ?></td>
+    <td><?= htmlspecialchars(fmtVarn($row['varn'] ?? '', (int)($row['chashma'] ?? 0))) ?></td>
     <td><?= htmlspecialchars(fmtBirthRegYear($row['birth_year'], $row['registration_year'] ?? '')) ?></td>
     <td><?= htmlspecialchars($row['rashi'] ?? '—') ?></td>
-    <td><?= htmlspecialchars($row['nadi'] ?? '—') ?></td>
-    <td><?= htmlspecialchars(fmtVarn($row['varn'] ?? '', (int)($row['chashma'] ?? 0))) ?></td>
-    <td class="col-secondary"><?= htmlspecialchars(fmtHeightWeight((int)$row['height_ft'], (int)$row['height_in'], $row['weight'] ?? 0)) ?></td>
-    <td class="col-secondary"><?= fmtSalaryShort((int)$row['salary']) ?></td>
-    <td class="col-secondary"><?= htmlspecialchars($row['city']) ?></td>
-    <td class="col-secondary"><?= htmlspecialchars($row['education']) ?></td>
-    <td class="col-secondary"><?= htmlspecialchars($row['aahar'] ?? '—') ?></td>
     <td class="col-heart" onclick="event.stopPropagation()">
         <button class="shortlist-btn"
                 data-id="<?= (int)$row['id'] ?>"

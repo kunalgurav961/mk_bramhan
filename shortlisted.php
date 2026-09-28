@@ -90,32 +90,20 @@ $totalCount = count($profiles);
                     <th class="col-name sortable-th" data-sort="name" role="button" tabindex="0" title="नावानुसार क्रमवारी लावा">
                         <div class="th-content"><span>नाव. जात</span><span class="th-sort-icon">↕</span></div>
                     </th>
+                    <th class="sortable-th" data-sort="salary" role="button" tabindex="0" title="पगारानुसार क्रमवारी लावा">
+                        <div class="th-content"><span>पगार</span><span class="th-sort-icon">↕</span></div>
+                    </th>
+                    <th class="sortable-th" data-sort="height" role="button" tabindex="0" title="उंचीनुसार क्रमवारी लावा">
+                        <div class="th-content"><span>उंची</span><span class="th-sort-icon">↕</span></div>
+                    </th>
+                    <th class="sortable-th" data-sort="varn" role="button" tabindex="0" title="वर्णानुसार क्रमवारी लावा">
+                        <div class="th-content"><span>वर्ण</span><span class="th-sort-icon">↕</span></div>
+                    </th>
                     <th class="sortable-th th-sorted" data-sort="birth_year" role="button" tabindex="0" title="जन्म वर्षानुसार क्रमवारी लावा">
                         <div class="th-content"><span>जन्म वर्ष</span><span class="th-sort-icon">▼</span></div>
                     </th>
                     <th class="sortable-th" data-sort="rashi" role="button" tabindex="0" title="राशीनुसार क्रमवारी लावा">
                         <div class="th-content"><span>राशी</span><span class="th-sort-icon">↕</span></div>
-                    </th>
-                    <th class="sortable-th" data-sort="nadi" role="button" tabindex="0" title="नाडीनुसार क्रमवारी लावा">
-                        <div class="th-content"><span>नाडी</span><span class="th-sort-icon">↕</span></div>
-                    </th>
-                    <th class="sortable-th" data-sort="varn" role="button" tabindex="0" title="वर्णानुसार क्रमवारी लावा">
-                        <div class="th-content"><span>वर्ण</span><span class="th-sort-icon">↕</span></div>
-                    </th>
-                    <th class="col-secondary sortable-th" data-sort="height" role="button" tabindex="0" title="उंचीनुसार क्रमवारी लावा">
-                        <div class="th-content"><span>उंची/वजन</span><span class="th-sort-icon">↕</span></div>
-                    </th>
-                    <th class="col-secondary sortable-th" data-sort="salary" role="button" tabindex="0" title="पगारानुसार क्रमवारी लावा">
-                        <div class="th-content"><span>पगार</span><span class="th-sort-icon">↕</span></div>
-                    </th>
-                    <th class="col-secondary sortable-th" data-sort="city" role="button" tabindex="0" title="शहरानुसार क्रमवारी लावा">
-                        <div class="th-content"><span>शहर</span><span class="th-sort-icon">↕</span></div>
-                    </th>
-                    <th class="col-secondary sortable-th" data-sort="education" role="button" tabindex="0" title="शिक्षणानुसार क्रमवारी लावा">
-                        <div class="th-content"><span>शिक्षण</span><span class="th-sort-icon">↕</span></div>
-                    </th>
-                    <th class="col-secondary sortable-th" data-sort="aahar" role="button" tabindex="0" title="आहारानुसार क्रमवारी लावा">
-                        <div class="th-content"><span>आहार</span><span class="th-sort-icon">↕</span></div>
                     </th>
                     <th class="sortable-th" data-sort="shortlisted" role="button" tabindex="0" title="शॉर्टलिस्टनुसार क्रमवारी लावा">
                         <div class="th-content"><span>❤</span><span class="th-sort-icon">↕</span></div>
@@ -125,7 +113,7 @@ $totalCount = count($profiles);
             <tbody id="results">
                 <?php if (empty($profiles)): ?>
                 <tr>
-                    <td colspan="11">
+                    <td colspan="7">
                         <div class="empty-state">
                             <div class="empty-icon">💔</div>
                             <h3>शॉर्टलिस्ट रिकामी आहे</h3>
@@ -151,15 +139,11 @@ $totalCount = count($profiles);
                         <?php endif; ?>
                         <span class="profile-name-text"><?= htmlspecialchars(fmtNameJaat($row['name'], $row['jaat'] ?? '')) ?></span>
                     </td>
+                    <td><?= fmtSalaryShort((int)$row['salary']) ?></td>
+                    <td><?= htmlspecialchars(fmtHeightWeight((int)$row['height_ft'], (int)$row['height_in'], $row['weight'] ?? 0)) ?></td>
+                    <td><?= htmlspecialchars(fmtVarn($row['varn'] ?? '', (int)($row['chashma'] ?? 0))) ?></td>
                     <td><?= htmlspecialchars(fmtBirthRegYear($row['birth_year'], $row['registration_year'] ?? '')) ?></td>
                     <td><?= htmlspecialchars($row['rashi'] ?? '—') ?></td>
-                    <td><?= htmlspecialchars($row['nadi'] ?? '—') ?></td>
-                    <td><?= htmlspecialchars(fmtVarn($row['varn'] ?? '', (int)($row['chashma'] ?? 0))) ?></td>
-                    <td class="col-secondary"><?= htmlspecialchars(fmtHeightWeight((int)$row['height_ft'], (int)$row['height_in'], $row['weight'] ?? 0)) ?></td>
-                    <td class="col-secondary"><?= fmtSalaryShort((int)$row['salary']) ?></td>
-                    <td class="col-secondary"><?= htmlspecialchars($row['city']) ?></td>
-                    <td class="col-secondary"><?= htmlspecialchars($row['education']) ?></td>
-                    <td class="col-secondary"><?= htmlspecialchars($row['aahar'] ?? '—') ?></td>
                     <td class="col-heart" onclick="event.stopPropagation()">
                         <button class="shortlist-btn"
                                 data-id="<?= (int)$row['id'] ?>"

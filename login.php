@@ -137,9 +137,12 @@ if (isset($_SESSION['admin_id'])) {
 
             </form>
 
-            <div class="text-center mt-4">
-                <a href="index.php" class="text-xs text-gray-400 hover:text-red-700 transition-colors">
-                    ← मुख्य पानावर जा
+            <div class="flex items-center justify-between text-xs mt-5 pt-3 border-t border-gray-100">
+                <a href="index.php" class="text-gray-400 hover:text-red-700 transition-colors">
+                    ← मुख्य पान
+                </a>
+                <a href="reset-password.php" class="text-amber-700 hover:underline font-medium">
+                    🔑 Password Reset करा
                 </a>
             </div>
 
