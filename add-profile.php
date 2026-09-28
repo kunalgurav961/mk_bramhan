@@ -7,8 +7,42 @@ if (!isset($_SESSION['admin_id'])) {
 }
 
 require_once 'includes/db.php';
+require_once 'includes/format-helpers.php';
 require_once 'includes/image-helper.php';
 $conn = getDB();
+
+function generateRegistrationNo(mysqli $conn, string $birthYear): string {
+    $fullYear = resolveFullYear($birthYear);
+    if ($fullYear === '') {
+        return '';
+    }
+
+    $prefix = $fullYear . '.';
+    $used = [];
+    $res = $conn->query("SELECT registration_no FROM profiles WHERE registration_no LIKE '" . $conn->real_escape_string($prefix) . "%' AND status != 'Inactive'");
+    if ($res) {
+        while ($row = $res->fetch_assoc()) {
+            $reg = trim((string)($row['registration_no'] ?? ''));
+            $pos = strpos($reg, '.');
+            if ($pos !== false) {
+                $serial = trim(substr($reg, $pos + 1));
+                if ($serial !== '' && ctype_digit($serial)) {
+                    $used[(int)$serial] = true;
+                }
+            }
+        }
+    }
+
+    for ($i = 0; $i <= 99; $i++) {
+        if (!isset($used[$i])) {
+            return $prefix . str_pad((string)$i, 2, '0', STR_PAD_LEFT);
+        }
+    }
+
+    return $prefix . '00';
+}
+
+$generatedRegistrationNo = generateRegistrationNo($conn, trim($_POST['birth_year'] ?? ''));
 
 // Enable exception mode for cleaner error handling
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
@@ -42,7 +76,10 @@ if (isset($_POST['save'])) {
     $registration_year = trim($_POST['registration_year'] ?? '');
 
     if ($registration_no === '') {
-        $registration_no = 'MKB' . date('YmdHis') . rand(10, 99);
+        $registration_no = generateRegistrationNo($conn, $birth_year);
+        if ($registration_no === '') {
+            $registration_no = 'MKB' . date('YmdHis') . rand(10, 99);
+        }
     }
     if (!in_array($gender, [1, 2])) $errors[] = 'लिंग निवडा.';
     if ($birth_year === '')  $errors[] = 'जन्म वर्ष आवश्यक आहे (उदा. 95, 01).';
@@ -242,9 +279,9 @@ if (isset($_POST['save'])) {
             <!-- Registration No -->
             <div>
                 <label class="field-label" for="registration_no">नोंदणी क्रमांक</label>
-                <input type="text" id="registration_no" name="registration_no" class="field"
-                       placeholder="उदा. MKB001"
-                       value="<?= htmlspecialchars($_POST['registration_no'] ?? '') ?>">
+                <input type="text" id="registration_no" name="registration_no" class="field bg-gray-100"
+                       placeholder="उदा. 1995.01"
+                       value="<?= htmlspecialchars($_POST['registration_no'] ?? $generatedRegistrationNo) ?>" readonly>
             </div>
 
             <!-- Mobile Number -->
@@ -351,12 +388,27 @@ if (isset($_POST['save'])) {
                        min="0" max="200" value="<?= htmlspecialchars($_POST['weight'] ?? '') ?>">
             </div>
 
-            <!-- Varn -->
-            <div>
-                <label class="field-label" for="varn">वर्ण</label>
-                <input type="text" id="varn" name="varn" class="field"
-                       placeholder="उदा. गोरा, गहू / गव्हाळ, सावळा"
-                       value="<?= htmlspecialchars($_POST['varn'] ?? '') ?>">
+            <div class="grid grid-cols-2 gap-3">
+                <!-- Varn -->
+                <div>
+                    <label class="field-label" for="varn">वर्ण</label>
+                    <select id="varn" name="varn" class="field">
+                        <option value="" <?= (($_POST['varn'] ?? '') === '') ? 'selected' : '' ?>>निवडा</option>
+                        <option value="Gora" <?= (($_POST['varn'] ?? '') === 'Gora') ? 'selected' : '' ?>>Gora</option>
+                        <option value="Gahu" <?= (($_POST['varn'] ?? '') === 'Gahu') ? 'selected' : '' ?>>Gahu</option>
+                        <option value="Sawala" <?= (($_POST['varn'] ?? '') === 'Sawala') ? 'selected' : '' ?>>Sawala</option>
+                    </select>
+                </div>
+
+                <!-- Chashma -->
+                <div>
+                    <label class="field-label" for="chashma">चष्मा</label>
+                    <select id="chashma" name="chashma" class="field">
+                        <option value="0" <?= ((string)($_POST['chashma'] ?? '0') === '0') ? 'selected' : '' ?>>नाही</option>
+                        <option value="1" <?= ((string)($_POST['chashma'] ?? '0') === '1') ? 'selected' : '' ?>>aahe</option>
+                        <option value="2" <?= ((string)($_POST['chashma'] ?? '0') === '2') ? 'selected' : '' ?>>lense</option>
+                    </select>
+                </div>
             </div>
 
             <!-- Rashi -->
@@ -386,18 +438,9 @@ if (isset($_POST['save'])) {
                 <label class="field-label" for="nadi">नाडी</label>
                 <select id="nadi" name="nadi" class="field">
                     <option value="" <?= (($_POST['nadi'] ?? '') === '') ? 'selected' : '' ?>>निवडा (माहित नाही)</option>
-                    <option value="प्रथम" <?= (($_POST['nadi'] ?? '') === 'प्रथम') ? 'selected' : '' ?>>प्रथम</option>
-                    <option value="मध्य" <?= (($_POST['nadi'] ?? '') === 'मध्य') ? 'selected' : '' ?>>मध्य</option>
-                    <option value="अंत्य" <?= (($_POST['nadi'] ?? '') === 'अंत्य') ? 'selected' : '' ?>>अंत्य</option>
-                </select>
-            </div>
-
-            <!-- Chashma -->
-            <div>
-                <label class="field-label" for="chashma">चष्मा</label>
-                <select id="chashma" name="chashma" class="field">
-                    <option value="0" <?= (($_POST['chashma'] ?? '') != '1') ? 'selected' : '' ?>>नाही</option>
-                    <option value="1" <?= (($_POST['chashma'] ?? '') == '1') ? 'selected' : '' ?>>हो</option>
+                    <option value="प्रथम" <?= (($_POST['nadi'] ?? '') === 'प्रथम') ? 'selected' : '' ?>>Pratham</option>
+                    <option value="मध्य" <?= (($_POST['nadi'] ?? '') === 'मध्य') ? 'selected' : '' ?>>Madhya</option>
+                    <option value="अंत्य" <?= (($_POST['nadi'] ?? '') === 'अंत्य') ? 'selected' : '' ?>>Antya</option>
                 </select>
             </div>
 

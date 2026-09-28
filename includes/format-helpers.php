@@ -103,29 +103,74 @@ function fmtNondaniKramank(string $regYear, string $regNo): string {
 }
 
 /**
- * Format varn + chashma for combined display: "गोरा / चष्मा"
+ * Normalise varn values to the project's required dropdown values.
+ * Supports the legacy Marathi labels as well.
+ */
+function normalizeVarnValue(?string $varn): string {
+    $v = strtolower(trim((string)$varn));
+    $map = [
+        'gora' => 'Gora',
+        'गोरा' => 'Gora',
+        'gahu' => 'Gahu',
+        'गहू' => 'Gahu',
+        'गव्हाळ' => 'Gahu',
+        'sawala' => 'Sawala',
+        'सावळा' => 'Sawala',
+    ];
+    return $map[$v] ?? trim((string)$varn);
+}
+
+function varnSortOrder(?string $varn): int {
+    $v = strtolower(trim((string)$varn));
+    $map = [
+        'gora' => 1,
+        'गोरा' => 1,
+        'gahu' => 2,
+        'गहू' => 2,
+        'गव्हाळ' => 2,
+        'sawala' => 3,
+        'सावळा' => 3,
+    ];
+    return $map[$v] ?? 99;
+}
+
+function fmtChashmaText(int $chashma): string {
+    if ($chashma === 2) return 'lense';
+    if ($chashma === 1) return 'aahe';
+    return 'nahi';
+}
+
+/**
+ * Format varn + chashma for combined display: "Gora / aahe"
  * If varn is empty, shows chashma status if applicable.
  * If chashma is 0 and varn is empty, returns '—'.
  */
 function fmtVarnChashma(string $varn, int $chashma): string {
-    $v = trim($varn);
-    $parts = [];
-    if ($v !== '') $parts[] = $v;
-    if ($chashma) $parts[] = 'चष्मा';
-    return !empty($parts) ? implode(' / ', $parts) : '—';
+    $v = normalizeVarnValue($varn);
+    $status = fmtChashmaText($chashma);
+
+    if ($v !== '' && $status !== 'nahi') {
+        return $v . ' / ' . $status;
+    }
+    if ($v !== '') {
+        return $v;
+    }
+    return $status === 'nahi' ? '—' : $status;
 }
 
 /**
  * Format वर्ण (Varna) for member listing:
- * Displays Marathi skin tone (गोरा, गहू, गव्हाळ, सावळा).
- * If glasses (chashma) are present, adds a subtle icon/tag.
+ * Displays the required Gora / Gahu / Sawala values and adds a label when chashma is present.
  */
 function fmtVarn(?string $varn, int $chashma = 0): string {
-    $v = trim((string)$varn);
+    $v = normalizeVarnValue($varn);
     if ($v === '') {
-        return $chashma ? '— (👓)' : '—';
+        $status = fmtChashmaText($chashma);
+        return $status === 'nahi' ? '—' : $status;
     }
-    return $chashma ? "{$v} 👓" : $v;
+
+    $status = fmtChashmaText($chashma);
+    return $status === 'nahi' ? $v : $v . ' / ' . $status;
 }
 
 /**

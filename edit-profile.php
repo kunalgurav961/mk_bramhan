@@ -337,9 +337,24 @@ $existingImages = fetchImages($conn, $id);
                 <label class="field-label">वजन (kg)</label>
                 <input type="number" name="weight" class="field" min="0" max="200" placeholder="उदा. 70" value="<?= val('weight',$profile) ?>">
             </div>
-            <div>
-                <label class="field-label">वर्ण</label>
-                <input type="text" name="varn" class="field" placeholder="उदा. गोरा, गहू / गव्हाळ, सावळा" value="<?= val('varn',$profile) ?>">
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="field-label">वर्ण</label>
+                    <select name="varn" class="field">
+                        <option value="" <?= ((string)($_POST['varn'] ?? $profile['varn'] ?? '') === '') ? 'selected' : '' ?>>निवडा</option>
+                        <option value="Gora" <?= ((string)($_POST['varn'] ?? $profile['varn'] ?? '') === 'Gora') ? 'selected' : '' ?>>Gora</option>
+                        <option value="Gahu" <?= ((string)($_POST['varn'] ?? $profile['varn'] ?? '') === 'Gahu') ? 'selected' : '' ?>>Gahu</option>
+                        <option value="Sawala" <?= ((string)($_POST['varn'] ?? $profile['varn'] ?? '') === 'Sawala') ? 'selected' : '' ?>>Sawala</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="field-label">चष्मा</label>
+                    <select name="chashma" class="field">
+                        <option value="0" <?= ((string)($_POST['chashma'] ?? $profile['chashma'] ?? 0) === '0') ? 'selected' : '' ?>>नाही</option>
+                        <option value="1" <?= ((string)($_POST['chashma'] ?? $profile['chashma'] ?? 0) === '1') ? 'selected' : '' ?>>aahe</option>
+                        <option value="2" <?= ((string)($_POST['chashma'] ?? $profile['chashma'] ?? 0) === '2') ? 'selected' : '' ?>>lense</option>
+                    </select>
+                </div>
             </div>
             <div>
                 <label class="field-label">राशी</label>
@@ -364,16 +379,9 @@ $existingImages = fetchImages($conn, $id);
                 <?php $nadiVal = $_POST['nadi'] ?? $profile['nadi'] ?? ''; ?>
                 <select name="nadi" class="field">
                     <option value="" <?= ($nadiVal === '') ? 'selected' : '' ?>>निवडा (माहित नाही)</option>
-                    <option value="प्रथम" <?= ($nadiVal === 'प्रथम') ? 'selected' : '' ?>>प्रथम</option>
-                    <option value="मध्य" <?= ($nadiVal === 'मध्य') ? 'selected' : '' ?>>मध्य</option>
-                    <option value="अंत्य" <?= ($nadiVal === 'अंत्य') ? 'selected' : '' ?>>अंत्य</option>
-                </select>
-            </div>
-            <div>
-                <label class="field-label">चष्मा</label>
-                <select name="chashma" class="field">
-                    <option value="0" <?= (($_POST['chashma'] ?? $profile['chashma'] ?? 0) != 1) ? 'selected' : '' ?>>नाही</option>
-                    <option value="1" <?= (($_POST['chashma'] ?? $profile['chashma'] ?? 0) == 1) ? 'selected' : '' ?>>हो</option>
+                    <option value="प्रथम" <?= ($nadiVal === 'प्रथम') ? 'selected' : '' ?>>Pratham</option>
+                    <option value="मध्य" <?= ($nadiVal === 'मध्य') ? 'selected' : '' ?>>Madhya</option>
+                    <option value="अंत्य" <?= ($nadiVal === 'अंत्य') ? 'selected' : '' ?>>Antya</option>
                 </select>
             </div>
             <div>

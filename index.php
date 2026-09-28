@@ -76,7 +76,15 @@ switch ($sortBy) {
         $orderSQL = "ORDER BY (jaat = '' OR jaat IS NULL), jaat {$sortDir}, id DESC";
         break;
     case 'varn':
-        $orderSQL = "ORDER BY (varn = '' OR varn IS NULL), varn {$sortDir}, id DESC";
+        $orderSQL = "ORDER BY (
+            CASE
+                WHEN varn IS NULL OR varn = '' THEN 99
+                WHEN LOWER(TRIM(varn)) IN ('gora', 'गोरा') THEN 1
+                WHEN LOWER(TRIM(varn)) IN ('gahu', 'गहू', 'गव्हाळ') THEN 2
+                WHEN LOWER(TRIM(varn)) IN ('sawala', 'सावळा') THEN 3
+                ELSE 99
+            END
+        ) ASC, id DESC";
         break;
     case 'chashma':
         $orderSQL = "ORDER BY chashma {$sortDir}, id DESC";
@@ -282,9 +290,9 @@ while ($row = $res->fetch_assoc()) $profiles[] = $row;
                     </td>
                     <td><?= fmtSalaryShort((int)$row['salary']) ?></td>
                     <td><?= htmlspecialchars(fmtHeightWeight((int)$row['height_ft'], (int)$row['height_in'], $row['weight'] ?? 0)) ?></td>
-                    <td><?= htmlspecialchars(fmtVarn($row['varn'] ?? '', (int)($row['chashma'] ?? 0))) ?></td>
+                    <td><?= htmlspecialchars(fmtVarnChashma($row['varn'] ?? '', (int)($row['chashma'] ?? 0))) ?></td>
                     <td><?= htmlspecialchars(fmtBirthRegYear($row['birth_year'], $row['registration_year'] ?? '')) ?></td>
-                    <td><?= htmlspecialchars($row['rashi'] ?? '—') ?></td>
+                    <td><?= htmlspecialchars(fmtRashiNadi($row['rashi'] ?? '', $row['nadi'] ?? '')) ?></td>
                     <td class="col-heart" onclick="event.stopPropagation()">
                         <button class="shortlist-btn"
                                 data-id="<?= (int)$row['id'] ?>"
