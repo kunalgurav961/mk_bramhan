@@ -433,27 +433,21 @@ input, select, textarea { font-family: inherit; }
     text-overflow: ellipsis;
 }
 
-/* First Column — Minimum Practical Width & Sticky Navigation */
+/* First Column — Scrolls with every other column */
 .compact-table th.col-name,
 .compact-table td.col-name {
     width: max-content;
     min-width: 135px;
     max-width: 220px;
     white-space: nowrap;
-    position: sticky;
-    left: 0;
 }
 
 .compact-table th.col-name {
-    z-index: 55;
     background: var(--bg-header);
-    box-shadow: 2px 0 5px rgba(0,0,0,0.12);
 }
 
 .compact-table td.col-name {
-    z-index: 20;
     background: #ffffff;
-    box-shadow: 2px 0 5px rgba(0,0,0,0.05);
 }
 
 .compact-table tbody tr:hover td.col-name,
@@ -463,18 +457,6 @@ input, select, textarea { font-family: inherit; }
 
 .compact-table tbody tr.profile-row:active td.col-name {
     background: #dbeafe;
-}
-
-/* On phones every column, including Name, moves with the horizontal scroll. */
-@media (max-width: 639px) {
-    .compact-table th.col-name,
-    .compact-table td.col-name {
-        position: static;
-        min-width: 0;
-        max-width: 100px;
-        width: auto;
-        box-shadow: none;
-    }
 }
 
 .profile-name-text {

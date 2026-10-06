@@ -257,17 +257,11 @@ $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin');
         <table class="compact-admin-table">
             <thead>
                 <tr>
-                    <!-- Column order: नाव | जात | जन्म | ठिकाण . व | उंची | गोत्र | शि. | पगार -->
+                    <!-- Column order: नाव | जन्म | ठिकाण . व | उंची | गोत्र | शि. | पगार -->
                     <th scope="col" class="cursor-pointer hover:bg-[#252542]">
                         <a href="<?= adminSortUrl('name', $sortBy, $sortDir, $search) ?>" class="flex items-center justify-between gap-1 text-white no-underline">
                             <span>नाव</span>
                             <span class="text-[9px] text-amber-300"><?= $sortBy === 'name' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span>
-                        </a>
-                    </th>
-                    <th scope="col" class="cursor-pointer hover:bg-[#252542]">
-                        <a href="<?= adminSortUrl('jaat', $sortBy, $sortDir, $search) ?>" class="flex items-center justify-between gap-1 text-white no-underline">
-                            <span>जात</span>
-                            <span class="text-[9px] text-amber-300"><?= $sortBy === 'jaat' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span>
                         </a>
                     </th>
                     <th scope="col" class="cursor-pointer hover:bg-[#252542]">
@@ -311,7 +305,7 @@ $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin');
             <tbody>
                 <?php if (empty($profiles)): ?>
                 <tr>
-                    <td colspan="8" class="text-center py-8 text-gray-400">
+                    <td colspan="7" class="text-center py-8 text-gray-400">
                         <div class="text-3xl mb-2">🔍</div>
                         कोणतीही प्रोफाइल सापडली नाही
                     </td>
@@ -332,7 +326,6 @@ $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin');
                         <?php endif; ?>
                         <span class="ml-1"><?= htmlspecialchars($row['name']) ?></span>
                     </td>
-                    <td><?= htmlspecialchars($row['jaat'] ?: '—') ?></td>
                     <td><?= htmlspecialchars(resolveFullYear($row['birth_year']) ?: ($row['birth_year'] ?: '—')) ?></td>
                     <td><?= htmlspecialchars($row['city'] . (!empty($row['weight']) ? ' . ' . (int)$row['weight'] : '')) ?></td>
                     <td><?= htmlspecialchars((int)$row['height_ft'] . "' " . (int)$row['height_in'] . '"') ?></td>

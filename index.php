@@ -247,12 +247,9 @@ while ($row = $res->fetch_assoc()) $profiles[] = $row;
         <table class="compact-table" aria-label="Profiles list">
             <thead>
                 <tr>
-                    <!-- Column order: नाव | जात | जन्म | ठिकाण . व | उंची | गोत्र | शि. | पगार -->
+                    <!-- Column order: नाव | जन्म | ठिकाण . व | उंची | गोत्र | शि. | पगार -->
                     <th scope="col" class="col-name sortable-th <?= $sortBy === 'name' ? 'th-sorted' : '' ?>" data-sort="name" role="button" tabindex="0" title="नावानुसार क्रमवारी लावा">
                         <div class="th-content"><span>नाव</span><span class="th-sort-icon"><?= $sortBy === 'name' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
-                    </th>
-                    <th scope="col" class="sortable-th <?= $sortBy === 'jaat' ? 'th-sorted' : '' ?>" data-sort="jaat" role="button" tabindex="0" title="जातीनुसार क्रमवारी लावा">
-                        <div class="th-content"><span>जात</span><span class="th-sort-icon"><?= $sortBy === 'jaat' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
                     </th>
                     <th scope="col" class="sortable-th <?= $sortBy === 'birth_year' ? 'th-sorted' : '' ?>" data-sort="birth_year" role="button" tabindex="0" title="जन्म वर्षानुसार क्रमवारी लावा">
                         <div class="th-content"><span>जन्म</span><span class="th-sort-icon"><?= $sortBy === 'birth_year' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
@@ -277,7 +274,7 @@ while ($row = $res->fetch_assoc()) $profiles[] = $row;
             <tbody id="results">
                 <?php if (empty($profiles)): ?>
                 <tr>
-                    <td colspan="8" style="text-align:center;padding:36px;color:#9ca3af;font-size:13px;">
+                    <td colspan="7" style="text-align:center;padding:36px;color:#9ca3af;font-size:13px;">
                         <div style="font-size:36px;margin-bottom:8px;">👤</div>
                         <div>अजून कोणतीही प्रोफाइल नाही</div>
                     </td>
@@ -300,7 +297,6 @@ while ($row = $res->fetch_assoc()) $profiles[] = $row;
                         <?php endif; ?>
                         <span class="profile-name-text"><?= htmlspecialchars($row['name']) ?></span>
                     </td>
-                    <td><?= htmlspecialchars($row['jaat'] ?: '—') ?></td>
                     <td><?= htmlspecialchars(resolveFullYear($row['birth_year']) ?: ($row['birth_year'] ?: '—')) ?></td>
                     <td><?= htmlspecialchars($row['city'] . (!empty($row['weight']) ? ' . ' . (int)$row['weight'] : '')) ?></td>
                     <td><?= htmlspecialchars((int)$row['height_ft'] . "' " . (int)$row['height_in'] . '"') ?></td>
