@@ -265,18 +265,12 @@ if (empty($rows)): ?>
         <?php endif; ?>
         <span class="profile-name-text"><?= htmlspecialchars(fmtNameJaat($row['name'], $row['jaat'] ?? '')) ?></span>
     </td>
+    <td><?= htmlspecialchars(resolveFullYear($row['birth_year']) ?: ($row['birth_year'] ?: '—')) ?></td>
+    <td><?= htmlspecialchars($row['city'] . (!empty($row['weight']) ? ' . ' . (int)$row['weight'] : '')) ?></td>
+    <td><?= htmlspecialchars((int)$row['height_ft'] . "' " . (int)$row['height_in'] . '"') ?></td>
+    <td><?= htmlspecialchars($row['gotra'] ?: '—') ?></td>
+    <td><?= htmlspecialchars($row['education'] ?: '—') ?></td>
     <td><?= fmtSalaryShort((int)$row['salary']) ?></td>
-    <td><?= htmlspecialchars(fmtHeightWeight((int)$row['height_ft'], (int)$row['height_in'], $row['weight'] ?? 0)) ?></td>
-    <td><?= htmlspecialchars(fmtVarn($row['varn'] ?? '', (int)($row['chashma'] ?? 0))) ?></td>
-    <td><?= htmlspecialchars(fmtBirthRegYear($row['birth_year'], $row['registration_year'] ?? '')) ?></td>
-    <td><?= htmlspecialchars(fmtRashiNadi($row['rashi'] ?? '', $row['nadi'] ?? '')) ?></td>
-    <td class="col-heart" onclick="event.stopPropagation()">
-        <button class="shortlist-btn"
-                data-id="<?= (int)$row['id'] ?>"
-                title="<?= $row['shortlisted'] ? 'शॉर्टलिस्टमधून काढा' : 'शॉर्टलिस्टला जोडा' ?>">
-            <?= $row['shortlisted'] ? '❤️' : '🤍' ?>
-        </button>
-    </td>
 </tr>
 <?php endforeach; ?>
 <?php endif; ?>

@@ -242,23 +242,23 @@ while ($row = $res->fetch_assoc()) $profiles[] = $row;
                     <th class="col-name sortable-th <?= $sortBy === 'name' ? 'th-sorted' : '' ?>" data-sort="name" role="button" tabindex="0" title="नावानुसार क्रमवारी लावा">
                         <div class="th-content"><span>नाव. जात</span><span class="th-sort-icon"><?= $sortBy === 'name' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
                     </th>
-                    <th class="sortable-th <?= $sortBy === 'salary' ? 'th-sorted' : '' ?>" data-sort="salary" role="button" tabindex="0" title="पगारानुसार क्रमवारी लावा">
-                        <div class="th-content"><span>पगार</span><span class="th-sort-icon"><?= $sortBy === 'salary' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
+                    <th class="sortable-th <?= $sortBy === 'birth_year' ? 'th-sorted' : '' ?>" data-sort="birth_year" role="button" tabindex="0" title="जन्म वर्षानुसार क्रमवारी लावा">
+                        <div class="th-content"><span>जन्म</span><span class="th-sort-icon"><?= $sortBy === 'birth_year' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
+                    </th>
+                    <th class="sortable-th <?= $sortBy === 'city' ? 'th-sorted' : '' ?>" data-sort="city" role="button" tabindex="0" title="शहर / ठिकाणानुसार क्रमवारी लावा">
+                        <div class="th-content"><span>ठिकाण . व</span><span class="th-sort-icon"><?= $sortBy === 'city' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
                     </th>
                     <th class="sortable-th <?= $sortBy === 'height' ? 'th-sorted' : '' ?>" data-sort="height" role="button" tabindex="0" title="उंचीनुसार क्रमवारी लावा">
                         <div class="th-content"><span>उंची</span><span class="th-sort-icon"><?= $sortBy === 'height' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
                     </th>
-                    <th class="sortable-th <?= $sortBy === 'varn' ? 'th-sorted' : '' ?>" data-sort="varn" role="button" tabindex="0" title="वर्णानुसार क्रमवारी लावा">
-                        <div class="th-content"><span>वर्ण</span><span class="th-sort-icon"><?= $sortBy === 'varn' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
+                    <th class="sortable-th <?= $sortBy === 'gotra' ? 'th-sorted' : '' ?>" data-sort="gotra" role="button" tabindex="0" title="गोत्रानुसार क्रमवारी लावा">
+                        <div class="th-content"><span>गोत्र</span><span class="th-sort-icon"><?= $sortBy === 'gotra' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
                     </th>
-                    <th class="sortable-th <?= $sortBy === 'birth_year' ? 'th-sorted' : '' ?>" data-sort="birth_year" role="button" tabindex="0" title="जन्म वर्षानुसार क्रमवारी लावा">
-                        <div class="th-content"><span>जन्म वर्ष</span><span class="th-sort-icon"><?= $sortBy === 'birth_year' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
+                    <th class="sortable-th <?= $sortBy === 'education' ? 'th-sorted' : '' ?>" data-sort="education" role="button" tabindex="0" title="शिक्षणानुसार क्रमवारी लावा">
+                        <div class="th-content"><span>शि.</span><span class="th-sort-icon"><?= $sortBy === 'education' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
                     </th>
-                    <th class="sortable-th <?= $sortBy === 'rashi' ? 'th-sorted' : '' ?>" data-sort="rashi" role="button" tabindex="0" title="राशीनुसार क्रमवारी लावा">
-                        <div class="th-content"><span>राशी</span><span class="th-sort-icon"><?= $sortBy === 'rashi' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
-                    </th>
-                    <th class="sortable-th <?= $sortBy === 'shortlisted' ? 'th-sorted' : '' ?>" data-sort="shortlisted" role="button" tabindex="0" title="शॉर्टलिस्टनुसार क्रमवारी लावा">
-                        <div class="th-content"><span>❤</span><span class="th-sort-icon"><?= $sortBy === 'shortlisted' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
+                    <th class="sortable-th <?= $sortBy === 'salary' ? 'th-sorted' : '' ?>" data-sort="salary" role="button" tabindex="0" title="पगारानुसार क्रमवारी लावा">
+                        <div class="th-content"><span>पगार</span><span class="th-sort-icon"><?= $sortBy === 'salary' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
                     </th>
                 </tr>
             </thead>
@@ -288,18 +288,12 @@ while ($row = $res->fetch_assoc()) $profiles[] = $row;
                         <?php endif; ?>
                         <span class="profile-name-text"><?= htmlspecialchars(fmtNameJaat($row['name'], $row['jaat'] ?? '')) ?></span>
                     </td>
+                    <td><?= htmlspecialchars(resolveFullYear($row['birth_year']) ?: ($row['birth_year'] ?: '—')) ?></td>
+                    <td><?= htmlspecialchars($row['city'] . (!empty($row['weight']) ? ' . ' . (int)$row['weight'] : '')) ?></td>
+                    <td><?= htmlspecialchars((int)$row['height_ft'] . "' " . (int)$row['height_in'] . '"') ?></td>
+                    <td><?= htmlspecialchars($row['gotra'] ?: '—') ?></td>
+                    <td><?= htmlspecialchars($row['education'] ?: '—') ?></td>
                     <td><?= fmtSalaryShort((int)$row['salary']) ?></td>
-                    <td><?= htmlspecialchars(fmtHeightWeight((int)$row['height_ft'], (int)$row['height_in'], $row['weight'] ?? 0)) ?></td>
-                    <td><?= htmlspecialchars(fmtVarnChashma($row['varn'] ?? '', (int)($row['chashma'] ?? 0))) ?></td>
-                    <td><?= htmlspecialchars(fmtBirthRegYear($row['birth_year'], $row['registration_year'] ?? '')) ?></td>
-                    <td><?= htmlspecialchars(fmtRashiNadi($row['rashi'] ?? '', $row['nadi'] ?? '')) ?></td>
-                    <td class="col-heart" onclick="event.stopPropagation()">
-                        <button class="shortlist-btn"
-                                data-id="<?= (int)$row['id'] ?>"
-                                title="<?= $row['shortlisted'] ? 'शॉर्टलिस्टमधून काढा' : 'शॉर्टलिस्टला जोडा' ?>">
-                            <?= $row['shortlisted'] ? '❤️' : '🤍' ?>
-                        </button>
-                    </td>
                 </tr>
                 <?php endforeach; ?>
                 <?php endif; ?>

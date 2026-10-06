@@ -249,21 +249,39 @@ $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin');
             <thead>
                 <tr>
                     <th class="cursor-pointer hover:bg-[#252542]">
-                        <a href="<?= adminSortUrl('gender', $sortBy, $sortDir, $search) ?>" class="flex items-center justify-between gap-1 text-white no-underline">
-                            <span>M/F</span>
-                            <span class="text-[9px] text-amber-300"><?= $sortBy === 'gender' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span>
-                        </a>
-                    </th>
-                    <th class="cursor-pointer hover:bg-[#252542]">
                         <a href="<?= adminSortUrl('name', $sortBy, $sortDir, $search) ?>" class="flex items-center justify-between gap-1 text-white no-underline">
                             <span>नाव. जात</span>
                             <span class="text-[9px] text-amber-300"><?= $sortBy === 'name' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span>
                         </a>
                     </th>
                     <th class="cursor-pointer hover:bg-[#252542]">
+                        <a href="<?= adminSortUrl('birth_year', $sortBy, $sortDir, $search) ?>" class="flex items-center justify-between gap-1 text-white no-underline">
+                            <span>जन्म</span>
+                            <span class="text-[9px] text-amber-300"><?= $sortBy === 'birth_year' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span>
+                        </a>
+                    </th>
+                    <th class="cursor-pointer hover:bg-[#252542]">
+                        <a href="<?= adminSortUrl('city', $sortBy, $sortDir, $search) ?>" class="flex items-center justify-between gap-1 text-white no-underline">
+                            <span>ठिकाण . व</span>
+                            <span class="text-[9px] text-amber-300"><?= $sortBy === 'city' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span>
+                        </a>
+                    </th>
+                    <th class="cursor-pointer hover:bg-[#252542]">
                         <a href="<?= adminSortUrl('height', $sortBy, $sortDir, $search) ?>" class="flex items-center justify-between gap-1 text-white no-underline">
-                            <span>उंची / वजन</span>
+                            <span>उंची</span>
                             <span class="text-[9px] text-amber-300"><?= $sortBy === 'height' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span>
+                        </a>
+                    </th>
+                    <th class="cursor-pointer hover:bg-[#252542]">
+                        <a href="<?= adminSortUrl('gotra', $sortBy, $sortDir, $search) ?>" class="flex items-center justify-between gap-1 text-white no-underline">
+                            <span>गोत्र</span>
+                            <span class="text-[9px] text-amber-300"><?= $sortBy === 'gotra' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span>
+                        </a>
+                    </th>
+                    <th class="cursor-pointer hover:bg-[#252542]">
+                        <a href="<?= adminSortUrl('education', $sortBy, $sortDir, $search) ?>" class="flex items-center justify-between gap-1 text-white no-underline">
+                            <span>शि.</span>
+                            <span class="text-[9px] text-amber-300"><?= $sortBy === 'education' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span>
                         </a>
                     </th>
                     <th class="cursor-pointer hover:bg-[#252542]">
@@ -272,19 +290,6 @@ $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin');
                             <span class="text-[9px] text-amber-300"><?= $sortBy === 'salary' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span>
                         </a>
                     </th>
-                    <th class="cursor-pointer hover:bg-[#252542]">
-                        <a href="<?= adminSortUrl('city', $sortBy, $sortDir, $search) ?>" class="flex items-center justify-between gap-1 text-white no-underline">
-                            <span>शहर</span>
-                            <span class="text-[9px] text-amber-300"><?= $sortBy === 'city' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span>
-                        </a>
-                    </th>
-                    <th class="cursor-pointer hover:bg-[#252542]">
-                        <a href="<?= adminSortUrl('birth_year', $sortBy, $sortDir, $search) ?>" class="flex items-center justify-between gap-1 text-white no-underline">
-                            <span>जन्म वर्ष.नोंदणी वर्ष</span>
-                            <span class="text-[9px] text-amber-300"><?= $sortBy === 'birth_year' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span>
-                        </a>
-                    </th>
-                    <th>⚙</th>
                 </tr>
             </thead>
             <tbody>
@@ -309,23 +314,14 @@ $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin');
                         <?php else: ?>
                             <span class="gender-f">मुलगी</span>
                         <?php endif; ?>
+                        <span class="ml-1"><?= htmlspecialchars(fmtNameJaat($row['name'], $row['jaat'] ?? '')) ?></span>
                     </td>
-                    <td class="max-w-[70px] overflow-hidden text-ellipsis"><?= htmlspecialchars(fmtNameJaat($row['name'], $row['jaat'] ?? '')) ?></td>
-                    <td><?= htmlspecialchars(fmtHeightWeight((int)$row['height_ft'], (int)$row['height_in'], $row['weight'] ?? 0)) ?></td>
+                    <td><?= htmlspecialchars(resolveFullYear($row['birth_year']) ?: ($row['birth_year'] ?: '—')) ?></td>
+                    <td><?= htmlspecialchars($row['city'] . (!empty($row['weight']) ? ' . ' . (int)$row['weight'] : '')) ?></td>
+                    <td><?= htmlspecialchars((int)$row['height_ft'] . "' " . (int)$row['height_in'] . '"') ?></td>
+                    <td><?= htmlspecialchars($row['gotra'] ?: '—') ?></td>
+                    <td><?= htmlspecialchars($row['education'] ?: '—') ?></td>
                     <td><?= fmtSalaryShort((int)$row['salary']) ?></td>
-                    <td><?= htmlspecialchars($row['city']) ?></td>
-                    <td><?= htmlspecialchars(fmtBirthRegYear($row['birth_year'], $row['registration_year'] ?? '')) ?></td>
-                    <td onclick="event.stopPropagation()">
-                        <div class="flex gap-1">
-                            <a href="edit-profile.php?id=<?= (int)$row['id'] ?>"
-                               class="text-blue-600 hover:text-blue-800 text-base"
-                               title="Edit">✏️</a>
-                            <a href="delete-profile.php?id=<?= (int)$row['id'] ?>"
-                               onclick="return confirm('\"<?= htmlspecialchars(addslashes($row['name'])) ?>\" ची प्रोफाइल कायमची हटवायची का?')"
-                               class="text-red-500 hover:text-red-700 text-base"
-                               title="Delete">🗑️</a>
-                        </div>
-                    </td>
                 </tr>
                 <?php endforeach; ?>
                 <?php endif; ?>
