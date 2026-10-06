@@ -14,44 +14,47 @@ $conn = getDB();
 function generateRegistrationNo(mysqli $conn, string $birthYear): string {
     $fullYear = resolveFullYear($birthYear);
     if ($fullYear === '') {
-        return '';
+        throw new RuntimeException('वैध जन्म वर्षाशिवाय नोंदणी क्रमांक तयार करता येत नाही.');
     }
 
     $prefix = $fullYear . '.';
     $used = [];
-    $res = $conn->query("SELECT registration_no FROM profiles WHERE registration_no LIKE '" . $conn->real_escape_string($prefix) . "%' AND status != 'Inactive'");
+    // Include inactive profiles too: registration numbers are permanent and must
+    // never be reused.
+    $like = $prefix . '%';
+    $stmt = $conn->prepare('SELECT registration_no FROM profiles WHERE registration_no LIKE ?');
+    $stmt->bind_param('s', $like);
+    $stmt->execute();
+    $res = $stmt->get_result();
     if ($res) {
         while ($row = $res->fetch_assoc()) {
             $reg = trim((string)($row['registration_no'] ?? ''));
-            $pos = strpos($reg, '.');
-            if ($pos !== false) {
-                $serial = trim(substr($reg, $pos + 1));
-                if ($serial !== '' && ctype_digit($serial)) {
-                    $used[(int)$serial] = true;
-                }
+            if (preg_match('/^' . preg_quote($prefix, '/') . '(\d+)$/', $reg, $matches)) {
+                $used[(int)$matches[1]] = true;
             }
         }
     }
 
-    for ($i = 0; $i <= 99; $i++) {
+    for ($i = 0; $i <= 999999; $i++) {
         if (!isset($used[$i])) {
             return $prefix . str_pad((string)$i, 2, '0', STR_PAD_LEFT);
         }
     }
 
-    return $prefix . '00';
+    throw new RuntimeException('नवीन नोंदणी क्रमांक उपलब्ध नाही.');
 }
-
-$generatedRegistrationNo = generateRegistrationNo($conn, trim($_POST['birth_year'] ?? ''));
 
 // Enable exception mode for cleaner error handling
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 $success = '';
 $errors  = [];
+$createdRegistrationNo = '';
 
 if (isset($_POST['save'])) {
-    $registration_no = trim($_POST['registration_no'] ?? '');
+    // This value is intentionally never accepted from the browser. It is assigned
+    // only after all form validation passes, immediately before inserting.
+    $registration_no = '';
     $gender          = (int)($_POST['gender'] ?? 0);
     $birth_year      = trim($_POST['birth_year'] ?? '');
     $name            = trim($_POST['name'] ?? '');
@@ -75,17 +78,19 @@ if (isset($_POST['save'])) {
     $nadi            = trim($_POST['nadi'] ?? '');
     $registration_year = trim($_POST['registration_year'] ?? '');
 
-    if ($registration_no === '') {
-        $registration_no = generateRegistrationNo($conn, $birth_year);
-        if ($registration_no === '') {
-            $registration_no = 'MKB' . date('YmdHis') . rand(10, 99);
-        }
-    }
     if (!in_array($gender, [1, 2])) $errors[] = 'लिंग निवडा.';
     if ($birth_year === '')  $errors[] = 'जन्म वर्ष आवश्यक आहे (उदा. 95, 01).';
     if ($name === '')  $errors[] = 'नाव आवश्यक आहे.';
     if ($gotra === '') $errors[] = 'गोत्र आवश्यक आहे.';
     if ($city === '')  $errors[] = 'शहर आवश्यक आहे.';
+
+    if (empty($errors)) {
+        try {
+            $registration_no = generateRegistrationNo($conn, $birth_year);
+        } catch (RuntimeException $e) {
+            $errors[] = $e->getMessage();
+        }
+    }
 
     // ── Process multiple images ───────────────────────────────────────────
     $uploadedImages = [];   // ['filename' => ..., 'sort_order' => ...]
@@ -121,23 +126,37 @@ if (isset($_POST['save'])) {
         $primaryImg = !empty($uploadedImages) ? $uploadedImages[0]['filename'] : null;
 
         try {
-            $stmt = $conn->prepare("
-                INSERT INTO profiles
-                    (registration_no, registration_year, gender, birth_year, name, gotra,
-                     height_ft, height_in, salary, weight, varn, chashma, aahar, rashi, nadi,
-                     education, occupation, city,
-                     mobile_no, father_name, mother_name, family_details, about_me, profile_image)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ");
-            $stmt->bind_param(
-                'ssisssiiiisissssssssssss',
-                $registration_no, $registration_year, $gender, $birth_year, $name, $gotra,
-                $height_ft, $height_in, $salary, $weight, $varn, $chashma, $aahar, $rashi, $nadi,
-                $education, $occupation, $city,
-                $mobile_no, $father_name, $mother_name, $family_details, $about_me, $primaryImg
-            );
-            $stmt->execute();
-            $newProfileId = $conn->insert_id;
+            // The unique database index is the final safeguard. If another request
+            // reserves the same number between our check and INSERT, generate a new
+            // one and retry automatically.
+            $newProfileId = 0;
+            for ($attempt = 0; $attempt < 3; $attempt++) {
+                try {
+                    $stmt = $conn->prepare("
+                        INSERT INTO profiles
+                            (registration_no, registration_year, gender, birth_year, name, gotra,
+                             height_ft, height_in, salary, weight, varn, chashma, aahar, rashi, nadi,
+                             education, occupation, city,
+                             mobile_no, father_name, mother_name, family_details, about_me, profile_image)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ");
+                    $stmt->bind_param(
+                        'ssisssiiiisissssssssssss',
+                        $registration_no, $registration_year, $gender, $birth_year, $name, $gotra,
+                        $height_ft, $height_in, $salary, $weight, $varn, $chashma, $aahar, $rashi, $nadi,
+                        $education, $occupation, $city,
+                        $mobile_no, $father_name, $mother_name, $family_details, $about_me, $primaryImg
+                    );
+                    $stmt->execute();
+                    $newProfileId = $conn->insert_id;
+                    break;
+                } catch (\mysqli_sql_exception $e) {
+                    if ($e->getCode() !== 1062 || $attempt === 2) {
+                        throw $e;
+                    }
+                    $registration_no = generateRegistrationNo($conn, $birth_year);
+                }
+            }
 
             // Save each image to profile_images table
             if (!empty($uploadedImages)) {
@@ -150,6 +169,7 @@ if (isset($_POST['save'])) {
                 }
             }
 
+            $createdRegistrationNo = $registration_no;
             $success = 'प्रोफाइल यशस्वीरित्या जोडली गेली! 🎉';
             $_POST   = [];
 
@@ -257,7 +277,13 @@ if (isset($_POST['save'])) {
 
         <?php if ($success): ?>
         <div class="bg-green-50 border border-green-200 text-green-800 rounded-xl px-4 py-3 text-sm mb-4 flex items-center gap-2">
-            <span class="text-lg">✅</span> <?= htmlspecialchars($success) ?>
+            <span class="text-lg">✅</span>
+            <span>
+                <?= htmlspecialchars($success) ?>
+                <?php if ($createdRegistrationNo !== ''): ?>
+                    <strong class="ml-1">नोंदणी क्रमांक: <?= htmlspecialchars($createdRegistrationNo) ?></strong>
+                <?php endif; ?>
+            </span>
         </div>
         <?php endif; ?>
 
@@ -279,9 +305,12 @@ if (isset($_POST['save'])) {
             <!-- Registration No -->
             <div>
                 <label class="field-label" for="registration_no">नोंदणी क्रमांक</label>
-                <input type="text" id="registration_no" name="registration_no" class="field bg-gray-100"
-                       placeholder="उदा. 1995.01"
-                       value="<?= htmlspecialchars($_POST['registration_no'] ?? $generatedRegistrationNo) ?>" readonly>
+                <input type="text" id="registration_no" class="field bg-gray-100"
+                       value="फॉर्म सबमिट झाल्यावर आपोआप तयार होईल"
+                       aria-describedby="registration_no_help" readonly>
+                <p id="registration_no_help" class="mt-1 text-xs text-gray-500">
+                    नोंदणी क्रमांक सबमिटनंतर तयार केला जातो आणि तो अद्वितीय आहे याची तपासणी केली जाते.
+                </p>
             </div>
 
             <!-- Mobile Number -->
