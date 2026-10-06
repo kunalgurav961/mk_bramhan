@@ -32,7 +32,7 @@ $like   = "%$search%";
 
 $allowedSortCols = [
     'id', 'name', 'birth_year', 'city', 'registration_no',
-    'salary', 'height', 'weight', 'education', 'gender', 'shortlisted', 'jaat'
+    'salary', 'height', 'weight', 'education', 'gender', 'shortlisted', 'jaat', 'gotra'
 ];
 $sortBy  = in_array($_GET['sort_by'] ?? '', $allowedSortCols, true) ? $_GET['sort_by'] : 'id';
 $sortDir = strtoupper($_GET['sort_dir'] ?? 'DESC') === 'ASC' ? 'ASC' : 'DESC';
@@ -70,6 +70,9 @@ switch ($sortBy) {
         break;
     case 'education':
         $orderSQL = "ORDER BY (education = '' OR education IS NULL), education {$sortDir}, id DESC";
+        break;
+    case 'gotra':
+        $orderSQL = "ORDER BY (gotra = '' OR gotra IS NULL), gotra {$sortDir}, id DESC";
         break;
     case 'registration_no':
         $orderSQL = "ORDER BY (registration_no = '' OR registration_no IS NULL), LENGTH(registration_no) {$sortDir}, registration_no {$sortDir}, id {$sortDir}";
@@ -224,6 +227,7 @@ $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin');
                     <option value="birth_year" <?= $sortBy === 'birth_year' ? 'selected' : '' ?>>जन्म वर्ष (Age)</option>
                     <option value="salary" <?= $sortBy === 'salary' ? 'selected' : '' ?>>पगार (Salary)</option>
                     <option value="height" <?= $sortBy === 'height' ? 'selected' : '' ?>>उंची (Height)</option>
+                    <option value="gotra" <?= $sortBy === 'gotra' ? 'selected' : '' ?>>गोत्र (Gotra)</option>
                     <option value="weight" <?= $sortBy === 'weight' ? 'selected' : '' ?>>वजन (Weight)</option>
                     <option value="education" <?= $sortBy === 'education' ? 'selected' : '' ?>>शिक्षण (Education)</option>
                     <option value="city" <?= $sortBy === 'city' ? 'selected' : '' ?>>शहर (City)</option>
@@ -248,43 +252,44 @@ $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin');
         <table class="compact-admin-table">
             <thead>
                 <tr>
-                    <th class="cursor-pointer hover:bg-[#252542]">
+                    <!-- Reference order: नाव. जात | जन्म | ठिकाण . व | उंची | गोत्र | शि. | पगार -->
+                    <th scope="col" class="cursor-pointer hover:bg-[#252542]">
                         <a href="<?= adminSortUrl('name', $sortBy, $sortDir, $search) ?>" class="flex items-center justify-between gap-1 text-white no-underline">
                             <span>नाव. जात</span>
                             <span class="text-[9px] text-amber-300"><?= $sortBy === 'name' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span>
                         </a>
                     </th>
-                    <th class="cursor-pointer hover:bg-[#252542]">
+                    <th scope="col" class="cursor-pointer hover:bg-[#252542]">
                         <a href="<?= adminSortUrl('birth_year', $sortBy, $sortDir, $search) ?>" class="flex items-center justify-between gap-1 text-white no-underline">
                             <span>जन्म</span>
                             <span class="text-[9px] text-amber-300"><?= $sortBy === 'birth_year' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span>
                         </a>
                     </th>
-                    <th class="cursor-pointer hover:bg-[#252542]">
+                    <th scope="col" class="cursor-pointer hover:bg-[#252542]">
                         <a href="<?= adminSortUrl('city', $sortBy, $sortDir, $search) ?>" class="flex items-center justify-between gap-1 text-white no-underline">
                             <span>ठिकाण . व</span>
                             <span class="text-[9px] text-amber-300"><?= $sortBy === 'city' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span>
                         </a>
                     </th>
-                    <th class="cursor-pointer hover:bg-[#252542]">
+                    <th scope="col" class="cursor-pointer hover:bg-[#252542]">
                         <a href="<?= adminSortUrl('height', $sortBy, $sortDir, $search) ?>" class="flex items-center justify-between gap-1 text-white no-underline">
                             <span>उंची</span>
                             <span class="text-[9px] text-amber-300"><?= $sortBy === 'height' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span>
                         </a>
                     </th>
-                    <th class="cursor-pointer hover:bg-[#252542]">
+                    <th scope="col" class="cursor-pointer hover:bg-[#252542]">
                         <a href="<?= adminSortUrl('gotra', $sortBy, $sortDir, $search) ?>" class="flex items-center justify-between gap-1 text-white no-underline">
                             <span>गोत्र</span>
                             <span class="text-[9px] text-amber-300"><?= $sortBy === 'gotra' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span>
                         </a>
                     </th>
-                    <th class="cursor-pointer hover:bg-[#252542]">
+                    <th scope="col" class="cursor-pointer hover:bg-[#252542]">
                         <a href="<?= adminSortUrl('education', $sortBy, $sortDir, $search) ?>" class="flex items-center justify-between gap-1 text-white no-underline">
                             <span>शि.</span>
                             <span class="text-[9px] text-amber-300"><?= $sortBy === 'education' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span>
                         </a>
                     </th>
-                    <th class="cursor-pointer hover:bg-[#252542]">
+                    <th scope="col" class="cursor-pointer hover:bg-[#252542]">
                         <a href="<?= adminSortUrl('salary', $sortBy, $sortDir, $search) ?>" class="flex items-center justify-between gap-1 text-white no-underline">
                             <span>पगार</span>
                             <span class="text-[9px] text-amber-300"><?= $sortBy === 'salary' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span>

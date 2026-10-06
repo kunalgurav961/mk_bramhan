@@ -14,7 +14,7 @@ $totalCount = (int)$conn->query("SELECT COUNT(*) AS c FROM profiles WHERE status
 // Sort params for initial load
 $allowedSortCols = [
     'id', 'name', 'birth_year', 'city', 'registration_no',
-    'salary', 'height', 'weight', 'education', 'gender', 'shortlisted', 'jaat',
+    'salary', 'height', 'weight', 'education', 'gender', 'shortlisted', 'jaat', 'gotra',
     'varn', 'chashma', 'aahar', 'rashi', 'nadi'
 ];
 $sortBy  = in_array($_GET['sort_by'] ?? '', $allowedSortCols, true)
@@ -62,6 +62,9 @@ switch ($sortBy) {
         break;
     case 'education':
         $orderSQL = "ORDER BY (education = '' OR education IS NULL), education {$sortDir}, id DESC";
+        break;
+    case 'gotra':
+        $orderSQL = "ORDER BY (gotra = '' OR gotra IS NULL), gotra {$sortDir}, id DESC";
         break;
     case 'registration_no':
         $orderSQL = "ORDER BY (registration_no = '' OR registration_no IS NULL), LENGTH(registration_no) {$sortDir}, registration_no {$sortDir}, id {$sortDir}";
@@ -239,25 +242,26 @@ while ($row = $res->fetch_assoc()) $profiles[] = $row;
         <table class="compact-table" aria-label="Profiles list">
             <thead>
                 <tr>
-                    <th class="col-name sortable-th <?= $sortBy === 'name' ? 'th-sorted' : '' ?>" data-sort="name" role="button" tabindex="0" title="नावानुसार क्रमवारी लावा">
+                    <!-- Reference order: नाव. जात | जन्म | ठिकाण . व | उंची | गोत्र | शि. | पगार -->
+                    <th scope="col" class="col-name sortable-th <?= $sortBy === 'name' ? 'th-sorted' : '' ?>" data-sort="name" role="button" tabindex="0" title="नावानुसार क्रमवारी लावा">
                         <div class="th-content"><span>नाव. जात</span><span class="th-sort-icon"><?= $sortBy === 'name' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
                     </th>
-                    <th class="sortable-th <?= $sortBy === 'birth_year' ? 'th-sorted' : '' ?>" data-sort="birth_year" role="button" tabindex="0" title="जन्म वर्षानुसार क्रमवारी लावा">
+                    <th scope="col" class="sortable-th <?= $sortBy === 'birth_year' ? 'th-sorted' : '' ?>" data-sort="birth_year" role="button" tabindex="0" title="जन्म वर्षानुसार क्रमवारी लावा">
                         <div class="th-content"><span>जन्म</span><span class="th-sort-icon"><?= $sortBy === 'birth_year' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
                     </th>
-                    <th class="sortable-th <?= $sortBy === 'city' ? 'th-sorted' : '' ?>" data-sort="city" role="button" tabindex="0" title="शहर / ठिकाणानुसार क्रमवारी लावा">
+                    <th scope="col" class="sortable-th <?= $sortBy === 'city' ? 'th-sorted' : '' ?>" data-sort="city" role="button" tabindex="0" title="शहर / ठिकाणानुसार क्रमवारी लावा">
                         <div class="th-content"><span>ठिकाण . व</span><span class="th-sort-icon"><?= $sortBy === 'city' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
                     </th>
-                    <th class="sortable-th <?= $sortBy === 'height' ? 'th-sorted' : '' ?>" data-sort="height" role="button" tabindex="0" title="उंचीनुसार क्रमवारी लावा">
+                    <th scope="col" class="sortable-th <?= $sortBy === 'height' ? 'th-sorted' : '' ?>" data-sort="height" role="button" tabindex="0" title="उंचीनुसार क्रमवारी लावा">
                         <div class="th-content"><span>उंची</span><span class="th-sort-icon"><?= $sortBy === 'height' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
                     </th>
-                    <th class="sortable-th <?= $sortBy === 'gotra' ? 'th-sorted' : '' ?>" data-sort="gotra" role="button" tabindex="0" title="गोत्रानुसार क्रमवारी लावा">
+                    <th scope="col" class="sortable-th <?= $sortBy === 'gotra' ? 'th-sorted' : '' ?>" data-sort="gotra" role="button" tabindex="0" title="गोत्रानुसार क्रमवारी लावा">
                         <div class="th-content"><span>गोत्र</span><span class="th-sort-icon"><?= $sortBy === 'gotra' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
                     </th>
-                    <th class="sortable-th <?= $sortBy === 'education' ? 'th-sorted' : '' ?>" data-sort="education" role="button" tabindex="0" title="शिक्षणानुसार क्रमवारी लावा">
+                    <th scope="col" class="sortable-th <?= $sortBy === 'education' ? 'th-sorted' : '' ?>" data-sort="education" role="button" tabindex="0" title="शिक्षणानुसार क्रमवारी लावा">
                         <div class="th-content"><span>शि.</span><span class="th-sort-icon"><?= $sortBy === 'education' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
                     </th>
-                    <th class="sortable-th <?= $sortBy === 'salary' ? 'th-sorted' : '' ?>" data-sort="salary" role="button" tabindex="0" title="पगारानुसार क्रमवारी लावा">
+                    <th scope="col" class="sortable-th <?= $sortBy === 'salary' ? 'th-sorted' : '' ?>" data-sort="salary" role="button" tabindex="0" title="पगारानुसार क्रमवारी लावा">
                         <div class="th-content"><span>पगार</span><span class="th-sort-icon"><?= $sortBy === 'salary' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
                     </th>
                 </tr>
