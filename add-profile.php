@@ -11,6 +11,13 @@ require_once 'includes/format-helpers.php';
 require_once 'includes/image-helper.php';
 $conn = getDB();
 
+function registrationNoExists(mysqli $conn, string $registrationNo): bool {
+    $stmt = $conn->prepare('SELECT 1 FROM profiles WHERE registration_no = ? LIMIT 1');
+    $stmt->bind_param('s', $registrationNo);
+    $stmt->execute();
+    return $stmt->get_result()->num_rows > 0;
+}
+
 function generateRegistrationNo(mysqli $conn, string $birthYear): string {
     $fullYear = resolveFullYear($birthYear);
     if ($fullYear === '') {
@@ -18,26 +25,12 @@ function generateRegistrationNo(mysqli $conn, string $birthYear): string {
     }
 
     $prefix = $fullYear . '.';
-    $used = [];
-    // Include inactive profiles too: registration numbers are permanent and must
-    // never be reused.
-    $like = $prefix . '%';
-    $stmt = $conn->prepare('SELECT registration_no FROM profiles WHERE registration_no LIKE ?');
-    $stmt->bind_param('s', $like);
-    $stmt->execute();
-    $res = $stmt->get_result();
-    if ($res) {
-        while ($row = $res->fetch_assoc()) {
-            $reg = trim((string)($row['registration_no'] ?? ''));
-            if (preg_match('/^' . preg_quote($prefix, '/') . '(\d+)$/', $reg, $matches)) {
-                $used[(int)$matches[1]] = true;
-            }
-        }
-    }
-
     for ($i = 0; $i <= 999999; $i++) {
-        if (!isset($used[$i])) {
-            return $prefix . str_pad((string)$i, 2, '0', STR_PAD_LEFT);
+        $candidate = $prefix . str_pad((string)$i, 2, '0', STR_PAD_LEFT);
+        // Check the exact candidate, including inactive profiles. This avoids
+        // assumptions about legacy registration-number formatting.
+        if (!registrationNoExists($conn, $candidate)) {
+            return $candidate;
         }
     }
 
@@ -130,7 +123,7 @@ if (isset($_POST['save'])) {
             // reserves the same number between our check and INSERT, generate a new
             // one and retry automatically.
             $newProfileId = 0;
-            for ($attempt = 0; $attempt < 3; $attempt++) {
+            for ($attempt = 0; $attempt < 10; $attempt++) {
                 try {
                     $stmt = $conn->prepare("
                         INSERT INTO profiles
@@ -151,7 +144,7 @@ if (isset($_POST['save'])) {
                     $newProfileId = $conn->insert_id;
                     break;
                 } catch (\mysqli_sql_exception $e) {
-                    if ($e->getCode() !== 1062 || $attempt === 2) {
+                    if ($e->getCode() !== 1062 || $attempt === 9) {
                         throw $e;
                     }
                     $registration_no = generateRegistrationNo($conn, $birth_year);
