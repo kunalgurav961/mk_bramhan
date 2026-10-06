@@ -307,8 +307,8 @@ $existingImages = fetchImages($conn, $id);
                 <input type="text" name="birth_year" class="field" maxlength="4" value="<?= val('birth_year',$profile) ?>" required>
             </div>
             <div>
-                <label class="field-label">नोंदणी वर्ष</label>
-                <input type="text" name="registration_year" class="field" maxlength="4" placeholder="उदा. 1993" value="<?= val('registration_year',$profile) ?>">
+                <label class="field-label">Serial No</label>
+                <input type="text" name="registration_year" class="field" maxlength="4" placeholder="उदा. 00" value="<?= val('registration_year',$profile) ?>">
             </div>
 
             <div class="section-title">वैयक्तिक माहिती</div>

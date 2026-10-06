@@ -6,8 +6,8 @@
  * ─────────────────────────────────────────────────────────────────
  *  search       string   Text / mobile / numeric-code query
  *  gender       int      0 = girl, 1 = boy, '' = all
- *  sort_by      string   column to sort: id|name|birth_year|city  (default: id)
- *  sort_dir     string   ASC | DESC  (default: DESC)
+ *  sort_by      string   column to sort: id|name|birth_year|city  (default: registration_no)
+ *  sort_dir     string   ASC | DESC  (default: ASC, birth year then serial)
  *  shortlisted  int      1 = only shortlisted profiles
  *  page         int      pagination page (default: 1)
  *
@@ -41,8 +41,8 @@ $allowedSortCols = [
 ];
 $sortBy  = in_array($_GET['sort_by'] ?? '', $allowedSortCols, true)
            ? $_GET['sort_by']
-           : 'birth_year';
-$sortDir = strtoupper($_GET['sort_dir'] ?? 'DESC') === 'ASC' ? 'ASC' : 'DESC';
+           : 'registration_no';
+$sortDir = strtoupper($_GET['sort_dir'] ?? ($sortBy === 'registration_no' ? 'ASC' : 'DESC')) === 'ASC' ? 'ASC' : 'DESC';
 
 // ── SMART SEARCH PARSING ──────────────────────────────────────────
 
@@ -164,7 +164,11 @@ switch ($sortBy) {
         $orderSQL = "ORDER BY (education = '' OR education IS NULL), education {$sortDir}, id DESC";
         break;
     case 'registration_no':
-        $orderSQL = "ORDER BY (registration_no = '' OR registration_no IS NULL), LENGTH(registration_no) {$sortDir}, registration_no {$sortDir}, id {$sortDir}";
+        $orderSQL = "ORDER BY
+            CASE WHEN registration_no REGEXP '^[0-9]{4}[.][0-9]+$' THEN 0 ELSE 1 END ASC,
+            CAST(SUBSTRING_INDEX(registration_no, '.', 1) AS UNSIGNED) {$sortDir},
+            CAST(SUBSTRING_INDEX(registration_no, '.', -1) AS UNSIGNED) {$sortDir},
+            id {$sortDir}";
         break;
     case 'gender':
         $orderSQL = "ORDER BY gender {$sortDir}, id DESC";
@@ -243,7 +247,7 @@ function getImgSrc(array $row): string {
 
 if (empty($rows)): ?>
 <tr>
-    <td colspan="7" style="text-align:center;padding:36px;color:#9ca3af;font-size:13px;">
+    <td colspan="8" style="text-align:center;padding:36px;color:#9ca3af;font-size:13px;">
         <div style="font-size:36px;margin-bottom:8px;"><?= $shortlisted ? '💔' : '🔍' ?></div>
         <div><?= $shortlisted ? 'शॉर्टलिस्ट रिकामी आहे' : 'कोणतीही प्रोफाइल सापडली नाही' ?></div>
     </td>
@@ -263,8 +267,9 @@ if (empty($rows)): ?>
         <?php else: ?>
             <span class="gender-f">मुलगी</span>
         <?php endif; ?>
-        <span class="profile-name-text"><?= htmlspecialchars(fmtNameJaat($row['name'], $row['jaat'] ?? '')) ?></span>
+        <span class="profile-name-text"><?= htmlspecialchars($row['name']) ?></span>
     </td>
+    <td><?= htmlspecialchars($row['jaat'] ?: '—') ?></td>
     <td><?= htmlspecialchars(resolveFullYear($row['birth_year']) ?: ($row['birth_year'] ?: '—')) ?></td>
     <td><?= htmlspecialchars($row['city'] . (!empty($row['weight']) ? ' . ' . (int)$row['weight'] : '')) ?></td>
     <td><?= htmlspecialchars((int)$row['height_ft'] . "' " . (int)$row['height_in'] . '"') ?></td>

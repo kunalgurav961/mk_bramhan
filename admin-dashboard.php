@@ -34,8 +34,9 @@ $allowedSortCols = [
     'id', 'name', 'birth_year', 'city', 'registration_no',
     'salary', 'height', 'weight', 'education', 'gender', 'shortlisted', 'jaat', 'gotra'
 ];
-$sortBy  = in_array($_GET['sort_by'] ?? '', $allowedSortCols, true) ? $_GET['sort_by'] : 'id';
-$sortDir = strtoupper($_GET['sort_dir'] ?? 'DESC') === 'ASC' ? 'ASC' : 'DESC';
+$sortBy  = in_array($_GET['sort_by'] ?? '', $allowedSortCols, true) ? $_GET['sort_by'] : 'registration_no';
+// Default list order: birth year, then that year's registration serial.
+$sortDir = strtoupper($_GET['sort_dir'] ?? ($sortBy === 'registration_no' ? 'ASC' : 'DESC')) === 'ASC' ? 'ASC' : 'DESC';
 
 switch ($sortBy) {
     case 'height':
@@ -75,7 +76,11 @@ switch ($sortBy) {
         $orderSQL = "ORDER BY (gotra = '' OR gotra IS NULL), gotra {$sortDir}, id DESC";
         break;
     case 'registration_no':
-        $orderSQL = "ORDER BY (registration_no = '' OR registration_no IS NULL), LENGTH(registration_no) {$sortDir}, registration_no {$sortDir}, id {$sortDir}";
+        $orderSQL = "ORDER BY
+            CASE WHEN registration_no REGEXP '^[0-9]{4}[.][0-9]+$' THEN 0 ELSE 1 END ASC,
+            CAST(SUBSTRING_INDEX(registration_no, '.', 1) AS UNSIGNED) {$sortDir},
+            CAST(SUBSTRING_INDEX(registration_no, '.', -1) AS UNSIGNED) {$sortDir},
+            id {$sortDir}";
         break;
     case 'gender':
         $orderSQL = "ORDER BY gender {$sortDir}, id DESC";
@@ -222,7 +227,8 @@ $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin');
             </div>
             <div class="flex items-center gap-2">
                 <select name="sort_by" onchange="this.form.submit()" class="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-gray-50 text-gray-700 flex-1">
-                    <option value="id" <?= $sortBy === 'id' ? 'selected' : '' ?>>नोंद क्र. (Newest)</option>
+                    <option value="registration_no" <?= $sortBy === 'registration_no' ? 'selected' : '' ?>>नोंद क्र. (जन्म वर्षानुसार)</option>
+                    <option value="id" <?= $sortBy === 'id' ? 'selected' : '' ?>>नोंद क्र. (पहिली नोंद आधी)</option>
                     <option value="name" <?= $sortBy === 'name' ? 'selected' : '' ?>>नाव (A-Z)</option>
                     <option value="birth_year" <?= $sortBy === 'birth_year' ? 'selected' : '' ?>>जन्म वर्ष (Age)</option>
                     <option value="salary" <?= $sortBy === 'salary' ? 'selected' : '' ?>>पगार (Salary)</option>
@@ -231,7 +237,6 @@ $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin');
                     <option value="weight" <?= $sortBy === 'weight' ? 'selected' : '' ?>>वजन (Weight)</option>
                     <option value="education" <?= $sortBy === 'education' ? 'selected' : '' ?>>शिक्षण (Education)</option>
                     <option value="city" <?= $sortBy === 'city' ? 'selected' : '' ?>>शहर (City)</option>
-                    <option value="registration_no" <?= $sortBy === 'registration_no' ? 'selected' : '' ?>>रजिस्टर क्र.</option>
                 </select>
                 <input type="hidden" name="sort_dir" value="<?= htmlspecialchars($sortDir) ?>">
                 <button type="button" onclick="this.form.sort_dir.value = (this.form.sort_dir.value === 'ASC' ? 'DESC' : 'ASC'); this.form.submit();"
@@ -252,11 +257,17 @@ $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin');
         <table class="compact-admin-table">
             <thead>
                 <tr>
-                    <!-- Reference order: नाव. जात | जन्म | ठिकाण . व | उंची | गोत्र | शि. | पगार -->
+                    <!-- Column order: नाव | जात | जन्म | ठिकाण . व | उंची | गोत्र | शि. | पगार -->
                     <th scope="col" class="cursor-pointer hover:bg-[#252542]">
                         <a href="<?= adminSortUrl('name', $sortBy, $sortDir, $search) ?>" class="flex items-center justify-between gap-1 text-white no-underline">
-                            <span>नाव. जात</span>
+                            <span>नाव</span>
                             <span class="text-[9px] text-amber-300"><?= $sortBy === 'name' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span>
+                        </a>
+                    </th>
+                    <th scope="col" class="cursor-pointer hover:bg-[#252542]">
+                        <a href="<?= adminSortUrl('jaat', $sortBy, $sortDir, $search) ?>" class="flex items-center justify-between gap-1 text-white no-underline">
+                            <span>जात</span>
+                            <span class="text-[9px] text-amber-300"><?= $sortBy === 'jaat' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span>
                         </a>
                     </th>
                     <th scope="col" class="cursor-pointer hover:bg-[#252542]">
@@ -300,7 +311,7 @@ $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin');
             <tbody>
                 <?php if (empty($profiles)): ?>
                 <tr>
-                    <td colspan="7" class="text-center py-8 text-gray-400">
+                    <td colspan="8" class="text-center py-8 text-gray-400">
                         <div class="text-3xl mb-2">🔍</div>
                         कोणतीही प्रोफाइल सापडली नाही
                     </td>
@@ -319,8 +330,9 @@ $adminName = htmlspecialchars($_SESSION['admin_name'] ?? 'Admin');
                         <?php else: ?>
                             <span class="gender-f">मुलगी</span>
                         <?php endif; ?>
-                        <span class="ml-1"><?= htmlspecialchars(fmtNameJaat($row['name'], $row['jaat'] ?? '')) ?></span>
+                        <span class="ml-1"><?= htmlspecialchars($row['name']) ?></span>
                     </td>
+                    <td><?= htmlspecialchars($row['jaat'] ?: '—') ?></td>
                     <td><?= htmlspecialchars(resolveFullYear($row['birth_year']) ?: ($row['birth_year'] ?: '—')) ?></td>
                     <td><?= htmlspecialchars($row['city'] . (!empty($row['weight']) ? ' . ' . (int)$row['weight'] : '')) ?></td>
                     <td><?= htmlspecialchars((int)$row['height_ft'] . "' " . (int)$row['height_in'] . '"') ?></td>

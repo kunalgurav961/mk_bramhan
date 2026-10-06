@@ -730,7 +730,7 @@ if (str_contains($backUrl, 'admin-dashboard')) $backLabel = 'Admin Dashboard';
                 </span>
             </div>
             <div class="info-row">
-                <span class="info-label">नोंदणी वर्ष</span>
+                <span class="info-label">Serial No</span>
                 <span class="info-value"><?= htmlspecialchars($p['registration_year'] ?: '—') ?></span>
             </div>
         </div>

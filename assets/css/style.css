@@ -465,6 +465,18 @@ input, select, textarea { font-family: inherit; }
     background: #dbeafe;
 }
 
+/* On phones every column, including Name, moves with the horizontal scroll. */
+@media (max-width: 639px) {
+    .compact-table th.col-name,
+    .compact-table td.col-name {
+        position: static;
+        min-width: 0;
+        max-width: 100px;
+        width: auto;
+        box-shadow: none;
+    }
+}
+
 .profile-name-text {
     font-weight: 500;
     color: var(--text-primary);
@@ -924,4 +936,3 @@ input, select, textarea { font-family: inherit; }
     line-height: 1;
     font-weight: 700;
 }
-

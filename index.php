@@ -19,8 +19,9 @@ $allowedSortCols = [
 ];
 $sortBy  = in_array($_GET['sort_by'] ?? '', $allowedSortCols, true)
            ? $_GET['sort_by']
-           : 'birth_year';
-$sortDir = strtoupper($_GET['sort_dir'] ?? 'DESC') === 'ASC' ? 'ASC' : 'DESC';
+           : 'registration_no';
+// Default list order: birth year, then that year's registration serial.
+$sortDir = strtoupper($_GET['sort_dir'] ?? ($sortBy === 'registration_no' ? 'ASC' : 'DESC')) === 'ASC' ? 'ASC' : 'DESC';
 
 switch ($sortBy) {
     case 'height':
@@ -67,7 +68,11 @@ switch ($sortBy) {
         $orderSQL = "ORDER BY (gotra = '' OR gotra IS NULL), gotra {$sortDir}, id DESC";
         break;
     case 'registration_no':
-        $orderSQL = "ORDER BY (registration_no = '' OR registration_no IS NULL), LENGTH(registration_no) {$sortDir}, registration_no {$sortDir}, id {$sortDir}";
+        $orderSQL = "ORDER BY
+            CASE WHEN registration_no REGEXP '^[0-9]{4}[.][0-9]+$' THEN 0 ELSE 1 END ASC,
+            CAST(SUBSTRING_INDEX(registration_no, '.', 1) AS UNSIGNED) {$sortDir},
+            CAST(SUBSTRING_INDEX(registration_no, '.', -1) AS UNSIGNED) {$sortDir},
+            id {$sortDir}";
         break;
     case 'gender':
         $orderSQL = "ORDER BY gender {$sortDir}, id DESC";
@@ -203,8 +208,9 @@ while ($row = $res->fetch_assoc()) $profiles[] = $row;
             <!-- Right: sort controls -->
             <div class="filter-sort-group">
                 <select id="sortBy" class="sort-select" aria-label="Sort by column">
+                    <option value="registration_no" <?= $sortBy === 'registration_no' ? 'selected' : '' ?>>नोंद क्र. (जन्म वर्षानुसार)</option>
+                    <option value="id" <?= $sortBy === 'id' ? 'selected' : '' ?>>नोंद क्र. (पहिली नोंद आधी)</option>
                     <option value="birth_year" <?= $sortBy === 'birth_year' ? 'selected' : '' ?>>जन्म वर्ष (Age)</option>
-                    <option value="id" <?= $sortBy === 'id' ? 'selected' : '' ?>>नोंद क्र. (Newest)</option>
                     <option value="name" <?= $sortBy === 'name' ? 'selected' : '' ?>>नाव (A→Z)</option>
                     <option value="rashi" <?= $sortBy === 'rashi' ? 'selected' : '' ?>>राशी (Rashi)</option>
                     <option value="nadi" <?= $sortBy === 'nadi' ? 'selected' : '' ?>>नाडी (Nadi)</option>
@@ -214,7 +220,6 @@ while ($row = $res->fetch_assoc()) $profiles[] = $row;
                     <option value="weight" <?= $sortBy === 'weight' ? 'selected' : '' ?>>वजन (Weight)</option>
                     <option value="education" <?= $sortBy === 'education' ? 'selected' : '' ?>>शिक्षण (Education)</option>
                     <option value="city" <?= $sortBy === 'city' ? 'selected' : '' ?>>शहर (City)</option>
-                    <option value="registration_no" <?= $sortBy === 'registration_no' ? 'selected' : '' ?>>रजिस्टर क्र. (Reg No)</option>
                     <option value="gender" <?= $sortBy === 'gender' ? 'selected' : '' ?>>लिंग (Gender)</option>
                     <option value="shortlisted" <?= $sortBy === 'shortlisted' ? 'selected' : '' ?>>शॉर्टलिस्ट (❤)</option>
                 </select>
@@ -242,9 +247,12 @@ while ($row = $res->fetch_assoc()) $profiles[] = $row;
         <table class="compact-table" aria-label="Profiles list">
             <thead>
                 <tr>
-                    <!-- Reference order: नाव. जात | जन्म | ठिकाण . व | उंची | गोत्र | शि. | पगार -->
+                    <!-- Column order: नाव | जात | जन्म | ठिकाण . व | उंची | गोत्र | शि. | पगार -->
                     <th scope="col" class="col-name sortable-th <?= $sortBy === 'name' ? 'th-sorted' : '' ?>" data-sort="name" role="button" tabindex="0" title="नावानुसार क्रमवारी लावा">
-                        <div class="th-content"><span>नाव. जात</span><span class="th-sort-icon"><?= $sortBy === 'name' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
+                        <div class="th-content"><span>नाव</span><span class="th-sort-icon"><?= $sortBy === 'name' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
+                    </th>
+                    <th scope="col" class="sortable-th <?= $sortBy === 'jaat' ? 'th-sorted' : '' ?>" data-sort="jaat" role="button" tabindex="0" title="जातीनुसार क्रमवारी लावा">
+                        <div class="th-content"><span>जात</span><span class="th-sort-icon"><?= $sortBy === 'jaat' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
                     </th>
                     <th scope="col" class="sortable-th <?= $sortBy === 'birth_year' ? 'th-sorted' : '' ?>" data-sort="birth_year" role="button" tabindex="0" title="जन्म वर्षानुसार क्रमवारी लावा">
                         <div class="th-content"><span>जन्म</span><span class="th-sort-icon"><?= $sortBy === 'birth_year' ? ($sortDir === 'ASC' ? '▲' : '▼') : '↕' ?></span></div>
@@ -269,7 +277,7 @@ while ($row = $res->fetch_assoc()) $profiles[] = $row;
             <tbody id="results">
                 <?php if (empty($profiles)): ?>
                 <tr>
-                    <td colspan="7" style="text-align:center;padding:36px;color:#9ca3af;font-size:13px;">
+                    <td colspan="8" style="text-align:center;padding:36px;color:#9ca3af;font-size:13px;">
                         <div style="font-size:36px;margin-bottom:8px;">👤</div>
                         <div>अजून कोणतीही प्रोफाइल नाही</div>
                     </td>
@@ -290,8 +298,9 @@ while ($row = $res->fetch_assoc()) $profiles[] = $row;
                         <?php else: ?>
                             <span class="gender-f">मुलगी</span>
                         <?php endif; ?>
-                        <span class="profile-name-text"><?= htmlspecialchars(fmtNameJaat($row['name'], $row['jaat'] ?? '')) ?></span>
+                        <span class="profile-name-text"><?= htmlspecialchars($row['name']) ?></span>
                     </td>
+                    <td><?= htmlspecialchars($row['jaat'] ?: '—') ?></td>
                     <td><?= htmlspecialchars(resolveFullYear($row['birth_year']) ?: ($row['birth_year'] ?: '—')) ?></td>
                     <td><?= htmlspecialchars($row['city'] . (!empty($row['weight']) ? ' . ' . (int)$row['weight'] : '')) ?></td>
                     <td><?= htmlspecialchars((int)$row['height_ft'] . "' " . (int)$row['height_in'] . '"') ?></td>

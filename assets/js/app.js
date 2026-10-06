@@ -175,12 +175,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // State
     let activeGender = '';
-    let sortBy       = sortByEl ? sortByEl.value : 'birth_year';
-    let sortDir      = sortDirBtn?.dataset.dir || 'DESC';
+    let sortBy       = sortByEl ? sortByEl.value : 'registration_no';
+    let sortDir      = sortDirBtn?.dataset.dir || 'ASC';
 
     // Default sort direction when a column is first selected
     const defaultSortDirs = {
-        id:              'DESC',
+        id:              'ASC',
+        registration_no: 'ASC',
         salary:          'DESC',
         birth_year:      'DESC',
         height:          'DESC',
@@ -189,7 +190,6 @@ document.addEventListener('DOMContentLoaded', function () {
         name:            'ASC',
         city:            'ASC',
         education:       'ASC',
-        registration_no: 'ASC',
         gender:          'ASC',
         jaat:            'ASC',
         varn:            'ASC',

@@ -296,7 +296,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['do_import'])) {
                 <tr>
                     <th>Line</th>
                     <th>Status</th>
-                    <th>जन्म वर्ष.नोंदणी वर्ष</th>
+                    <th>जन्म वर्ष.Serial No</th>
                     <th>लिंग</th>
                     <th>वर्ष</th>
                     <th>नाव</th>

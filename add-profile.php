@@ -335,11 +335,11 @@ if (isset($_POST['save'])) {
                        value="<?= htmlspecialchars($_POST['birth_year'] ?? '') ?>" required>
             </div>
 
-            <!-- Registration Year -->
+            <!-- Serial number -->
             <div>
-                <label class="field-label" for="registration_year">नोंदणी वर्ष</label>
+                <label class="field-label" for="registration_year">Serial No</label>
                 <input type="text" id="registration_year" name="registration_year" class="field"
-                       placeholder="उदा. 1993"
+                       placeholder="उदा. 00"
                        maxlength="4"
                        value="<?= htmlspecialchars($_POST['registration_year'] ?? '') ?>">
             </div>

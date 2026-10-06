@@ -47,7 +47,7 @@ $out = fopen('php://output', 'w');
 // Header row
 fputcsv($out, [
     'नोंदणी क्र.',
-    'नोंदणी वर्ष',
+    'Serial No',
     'नाव',
     'लिंग',
     'जन्म वर्ष',
