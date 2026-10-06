@@ -392,6 +392,7 @@ $existingImages = fetchImages($conn, $id);
                     <option value="शाकाहारी" <?= ($aaharVal === 'शाकाहारी') ? 'selected' : '' ?>>शाकाहारी</option>
                     <option value="मांसाहारी" <?= ($aaharVal === 'मांसाहारी') ? 'selected' : '' ?>>मांसाहारी</option>
                     <option value="एगीटेरियन" <?= ($aaharVal === 'एगीटेरियन') ? 'selected' : '' ?>>एगीटेरियन</option>
+                    <option value="प्रासंगिक" <?= ($aaharVal === 'प्रासंगिक') ? 'selected' : '' ?>>प्रासंगिक</option>
                 </select>
             </div>
             <div>

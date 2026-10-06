@@ -452,6 +452,7 @@ if (isset($_POST['save'])) {
                     <option value="शाकाहारी" <?= (($_POST['aahar'] ?? '') === 'शाकाहारी') ? 'selected' : '' ?>>शाकाहारी</option>
                     <option value="मांसाहारी" <?= (($_POST['aahar'] ?? '') === 'मांसाहारी') ? 'selected' : '' ?>>मांसाहारी</option>
                     <option value="एगीटेरियन" <?= (($_POST['aahar'] ?? '') === 'एगीटेरियन') ? 'selected' : '' ?>>एगीटेरियन</option>
+                    <option value="प्रासंगिक" <?= (($_POST['aahar'] ?? '') === 'प्रासंगिक') ? 'selected' : '' ?>>प्रासंगिक</option>
                 </select>
             </div>
 
